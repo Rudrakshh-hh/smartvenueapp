@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
@@ -15,7 +17,7 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
-  int _selectedFloorView = 2; // Default to Level 2
+  final MapController _mapController = MapController();
   bool _showMapMode = true;
 
   @override
@@ -26,566 +28,197 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isDark = appState.isDarkMode;
-    final venues = appState.filteredVenues;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'INDOOR EXPLORER',
-                    style: TextStyle(
-                      color: AppTheme.cyan(isDark),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  Text(
-                    'IMDF Map & Venues',
-                    style: TextStyle(
-                      color: AppTheme.textPrimary(isDark),
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Map vs List Mode Switcher
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.3)),
-                ),
-                padding: const EdgeInsets.all(4),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () => setState(() => _showMapMode = true),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _showMapMode ? AppTheme.cyan(isDark) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.map_rounded,
-                          color: _showMapMode ? Colors.white : AppTheme.textMuted(isDark),
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => setState(() => _showMapMode = false),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: !_showMapMode ? AppTheme.cyan(isDark) : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(
-                          Icons.list_rounded,
-                          color: !_showMapMode ? Colors.white : AppTheme.textMuted(isDark),
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Search Field
-          TextField(
-            controller: _searchController,
-            style: TextStyle(color: AppTheme.textPrimary(isDark)),
-            onChanged: (val) {
-              appState.setSearchQuery(val);
-              appState.addRecentSearch(val);
-            },
-            decoration: InputDecoration(
-              hintText: 'Search by room code, lecture hall, or lab name...',
-              prefixIcon: Icon(Icons.search_rounded, color: AppTheme.cyan(isDark)),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: Icon(Icons.clear_rounded, color: AppTheme.textMuted(isDark)),
-                      onPressed: () {
-                        _searchController.clear();
-                        appState.setSearchQuery('');
-                      },
-                    )
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Level Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildLevelChip('All Levels', null, appState, isDark),
-                const SizedBox(width: 8),
-                _buildLevelChip('Level 1', 1, appState, isDark),
-                const SizedBox(width: 8),
-                _buildLevelChip('Level 2', 2, appState, isDark),
-                const SizedBox(width: 8),
-                _buildLevelChip('Level 3', 3, appState, isDark),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // IMDF MAP VIEWER (if map mode enabled)
-          if (_showMapMode) ...[
-            GlassContainer(
-              borderRadius: 24,
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.layers_rounded, color: AppTheme.cyan(isDark), size: 18),
-                          const SizedBox(width: 6),
-                          Text(
-                            'IMDF LEVEL BLUEPRINT',
-                            style: TextStyle(
-                              color: AppTheme.cyan(isDark),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // Floor Switcher Pills
-                      Row(
-                        children: [1, 2, 3].map((floor) {
-                          final isSel = _selectedFloorView == floor;
-                          return GestureDetector(
-                            onTap: () => setState(() => _selectedFloorView = floor),
-                            child: Container(
-                              margin: const EdgeInsets.only(left: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: isSel ? AppTheme.cyan(isDark) : (isDark ? AppTheme.darkBg : AppTheme.lightCard),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.4)),
-                              ),
-                              child: Text(
-                                'L$floor',
-                                style: TextStyle(
-                                  color: isSel ? Colors.white : AppTheme.textPrimary(isDark),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Map Blueprint Canvas
-                  Container(
-                    height: 220,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: (isDark ? AppTheme.darkBg : AppTheme.lightCard),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.blue(isDark).withValues(alpha: 0.3)),
-                    ),
-                    child: Stack(
-                      children: [
-                        CustomPaint(
-                          painter: _IMDFInteractiveMapPainter(floorLevel: _selectedFloorView, isDark: isDark),
-                          child: const SizedBox.expand(),
-                        ),
-
-                        // Interactive Room Pin Overlay Buttons
-                        Positioned(
-                          top: 45,
-                          left: 60,
-                          child: _buildMapRoomPin(
-                            context,
-                            appState,
-                            roomCode: 'LH-201',
-                            roomName: 'Turing Hall',
-                            isOccupied: false,
-                          ),
-                        ),
-                        Positioned(
-                          top: 45,
-                          right: 70,
-                          child: _buildMapRoomPin(
-                            context,
-                            appState,
-                            roomCode: 'LAB-304',
-                            roomName: 'Robotics Lab',
-                            isOccupied: true,
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 50,
-                          left: 120,
-                          child: _buildMapRoomPin(
-                            context,
-                            appState,
-                            roomCode: 'SP-102',
-                            roomName: 'Focus Pod B',
-                            isOccupied: false,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-
-          // MATCHING VENUES LIST
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'FOUND VENUES (${venues.length})',
-                style: TextStyle(
-                  color: AppTheme.cyan(isDark),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          if (venues.isEmpty)
-            GlassContainer(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text(
-                  'No venues matching your query found.',
-                  style: TextStyle(color: AppTheme.textMuted(isDark)),
-                ),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: venues.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final venue = venues[index];
-                return _buildVenueCard(context, appState, venue, isDark);
-              },
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLevelChip(String label, int? level, AppState appState, bool isDark) {
-    final isSelected = appState.selectedLevelFilter == level;
-    return GestureDetector(
-      onTap: () => appState.setLevelFilter(level),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.cyan(isDark).withValues(alpha: 0.25) : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected ? AppTheme.cyan(isDark) : AppTheme.cyan(isDark).withValues(alpha: 0.2),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppTheme.cyan(isDark) : AppTheme.textSecondary(isDark),
-            fontSize: 12,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMapRoomPin(
-    BuildContext context,
-    AppState appState, {
-    required String roomCode,
-    required String roomName,
-    required bool isOccupied,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        final venue = appState.venues.firstWhere(
-          (v) => v.code == roomCode,
-          orElse: () => appState.venues.first,
-        );
-        appState.startNavigation(venue);
-        showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: Colors.transparent,
-          builder: (context) => const NavigationModal(),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isOccupied ? AppTheme.roseAlert.withValues(alpha: 0.85) : AppTheme.emeraldSuccess.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: (isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess).withValues(alpha: 0.4),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.location_on_rounded, color: Colors.white, size: 12),
-            const SizedBox(width: 4),
-            Text(
-              roomCode,
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVenueCard(BuildContext context, AppState appState, Venue venue, bool isDark) {
-    return GlassContainer(
-      borderRadius: 18,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Theme(
+      data: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
+      child: Scaffold(
+        backgroundColor: Colors.black, // FORCE SCAFFOLD BLACK
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.cyan(isDark).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.3)),
-                ),
-                child: Icon(Icons.meeting_room_rounded, color: AppTheme.cyan(isDark), size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          venue.code,
-                          style: TextStyle(
-                            color: AppTheme.cyan(isDark),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: venue.isOccupied
-                                ? AppTheme.roseAlert.withValues(alpha: 0.2)
-                                : AppTheme.emeraldSuccess.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: venue.isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess,
-                            ),
-                          ),
-                          child: Text(
-                            venue.isOccupied ? 'OCCUPIED' : 'VACANT',
-                            style: TextStyle(
-                              color: venue.isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      venue.name,
-                      style: TextStyle(
-                        color: AppTheme.textPrimary(isDark),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${venue.building} • Level ${venue.level} • ${venue.category}',
-                      style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11.5),
-                    ),
-                  ],
-                ),
-              ),
+              _buildHeader(isDark),
+              const SizedBox(height: 16),
+              _buildSearchField(appState, isDark),
+              const SizedBox(height: 16),
+              
+              if (_showMapMode) ...[
+                _buildDittoMap(),
+                const SizedBox(height: 20),
+              ],
+
+              _buildVenueList(appState.filteredVenues, appState, isDark),
             ],
           ),
-          const SizedBox(height: 12),
-
-          // Current Status / Activity line
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface).withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  venue.isOccupied ? Icons.info_outline : Icons.check_circle_outline,
-                  size: 14,
-                  color: venue.isOccupied ? AppTheme.amberWarning : AppTheme.emeraldSuccess,
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    venue.currentActivity,
-                    style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 11),
-                  ),
-                ),
-                Text(
-                  '${venue.distanceMeters.toInt()}m away',
-                  style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 11, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Action Button
-          SizedBox(
-            width: double.infinity,
-            height: 42,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                appState.startNavigation(venue);
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const NavigationModal(),
-                );
-              },
-              icon: const Icon(Icons.navigation_rounded, size: 16, color: Colors.white),
-              label: const Text(
-                'NAVIGATE HERE',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.cyan(isDark),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
-}
 
-class _IMDFInteractiveMapPainter extends CustomPainter {
-  final int floorLevel;
-  final bool isDark;
+  Widget _buildDittoMap() {
+    return Container(
+      height: 550,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.black, // Container background
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white, width: 2), // High contrast border
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: [
+            // Layer 0: Hardcoded Black Base
+            const Positioned.fill(child: ColoredBox(color: Colors.black)),
+            
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: LatLng(0.0005, 0),
+                initialZoom: 17.2,
+                backgroundColor: Colors.black, // Force library background
+                interactionOptions: const InteractionOptions(flags: InteractiveFlag.all),
+              ),
+              children: [
+                // Layer 1: Floor Base Polygon (Pure Black)
+                PolygonLayer(
+                  polygons: [
+                    Polygon(
+                      points: [LatLng(0.1, -0.1), LatLng(0.1, 0.1), LatLng(-0.1, 0.1), LatLng(-0.1, -0.1)],
+                      color: Colors.black,
+                      borderColor: Colors.transparent,
+                    ),
+                  ],
+                ),
+                // Layer 2: Blueprint Geometry (Solid White Lines)
+                PolygonLayer(
+                  polygons: _buildBlueprintGeometry(),
+                ),
+                
+                // Layer 3: Room Names (Pure White Bold Text)
+                MarkerLayer(
+                  markers: _buildBlueprintLabels(),
+                ),
 
-  _IMDFInteractiveMapPainter({required this.floorLevel, required this.isDark});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Blueprint Background Grid Lines
-    final cyanColor = isDark ? AppTheme.cyanPrimary : const Color(0xFF0369A1);
-    final gridPaint = Paint()
-      ..color = cyanColor.withValues(alpha: 0.08)
-      ..strokeWidth = 1.0;
-
-    for (double x = 0; x < size.width; x += 20) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-    for (double y = 0; y < size.height; y += 20) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-
-    // Outer Building Boundary
-    final wallPaint = Paint()
-      ..color = cyanColor.withValues(alpha: 0.4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    canvas.drawRRect(
-      RRect.fromLTRBR(15, 15, size.width - 15, size.height - 15, const Radius.circular(12)),
-      wallPaint,
+                // Layer 4: IPS Status Pins
+                MarkerLayer(
+                  markers: _buildStatusPins(context),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
-
-    // IMDF Room Corridors and Rooms
-    final roomFill = Paint()..color = (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85);
-    final roomOutline = Paint()
-      ..color = AppTheme.blue(isDark).withValues(alpha: 0.35)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    // Room 1 (Turing Hall)
-    canvas.drawRRect(RRect.fromLTRBR(30, 30, 130, 90, const Radius.circular(6)), roomFill);
-    canvas.drawRRect(RRect.fromLTRBR(30, 30, 130, 90, const Radius.circular(6)), roomOutline);
-
-    // Room 2 (Robotics Lab)
-    canvas.drawRRect(RRect.fromLTRBR(size.width - 130, 30, size.width - 30, 90, const Radius.circular(6)), roomFill);
-    canvas.drawRRect(RRect.fromLTRBR(size.width - 130, 30, size.width - 30, 90, const Radius.circular(6)), roomOutline);
-
-    // Center Hallway / Elevator Zone
-    final elevFill = Paint()..color = AppTheme.purple(isDark).withValues(alpha: 0.2);
-    canvas.drawRRect(RRect.fromLTRBR(size.width / 2 - 35, 30, size.width / 2 + 35, 80, const Radius.circular(6)), elevFill);
-
-    // Bottom Pods
-    canvas.drawRRect(RRect.fromLTRBR(80, 130, 200, 185, const Radius.circular(6)), roomFill);
-    canvas.drawRRect(RRect.fromLTRBR(80, 130, 200, 185, const Radius.circular(6)), roomOutline);
   }
 
-  @override
-  bool shouldRepaint(covariant _IMDFInteractiveMapPainter oldDelegate) =>
-      oldDelegate.floorLevel != floorLevel || oldDelegate.isDark != isDark;
+  List<Polygon> _buildBlueprintGeometry() {
+    const border = Colors.white; 
+    const fill = Colors.black; 
+
+    return [
+      // TOP ROW CLASSROOMS
+      _r(LatLng(0.0045, -0.0045), LatLng(0.0030, -0.0023), border, fill), // 113
+      _r(LatLng(0.0045, -0.0023), LatLng(0.0030, -0.0008), border, fill), // 114
+      _r(LatLng(0.0045, -0.0008), LatLng(0.0030, 0.0007), border, fill),  // 115
+      _r(LatLng(0.0045, 0.0007), LatLng(0.0030, 0.0020), border, fill),   // 116
+      _r(LatLng(0.0045, 0.0020), LatLng(0.0030, 0.0048), border, fill),   // 117
+
+      // MAIN HORIZONTAL CORRIDOR
+      _r(LatLng(0.0030, -0.0055), LatLng(0.0022, 0.0055), border, fill),
+
+      // LEFT SIDE WING
+      _r(LatLng(0.0015, -0.0058), LatLng(0.0006, -0.0048), border, fill), // 112
+      _r(LatLng(0.0015, -0.0048), LatLng(0.0006, -0.0038), border, fill), // 111
+      _r(LatLng(0.0015, -0.0038), LatLng(0.0006, -0.0028), border, fill), // 110
+      _r(LatLng(0.0006, -0.0048), LatLng(-0.0010, -0.0028), border, fill), // 109
+
+      // CENTRAL BLOCK
+      _r(LatLng(0.0015, -0.0021), LatLng(-0.0014, 0.0010), border, fill), // Wifi Zone
+      _r(LatLng(-0.0006, -0.0014), LatLng(-0.0014, -0.0008), border, border), // Main Lift
+      _r(LatLng(-0.0006, 0.0001), LatLng(-0.0014, 0.0007), border, border),  // Female Lift
+
+      // RIGHT SIDE WING
+      _r(LatLng(0.0015, 0.0016), LatLng(0.0006, 0.0026), border, fill), // 120
+      _r(LatLng(0.0015, 0.0026), LatLng(0.0006, 0.0036), border, fill), // 119
+      _r(LatLng(0.0015, 0.0036), LatLng(0.0008, 0.0046), border, fill), // 118
+      _r(LatLng(0.0006, 0.0016), LatLng(-0.0010, 0.0036), border, fill), // 121
+
+      // BOTTOM BLOCKS
+      _r(LatLng(-0.0023, -0.0024), LatLng(-0.0045, -0.0011), border, fill), // 108
+      _r(LatLng(-0.0023, 0.0011), LatLng(-0.0045, 0.0024), border, fill), // Right Bot
+    ];
+  }
+
+  Polygon _r(LatLng tl, LatLng br, Color b, Color f) => Polygon(
+    points: [LatLng(tl.latitude, tl.longitude), LatLng(tl.latitude, br.longitude), LatLng(br.latitude, br.longitude), LatLng(br.latitude, tl.longitude)],
+    borderColor: b, borderStrokeWidth: 2.5, color: f, // Bold White lines
+  );
+
+  List<Marker> _buildBlueprintLabels() {
+    const s = TextStyle(color: Colors.white, fontSize: 7, fontWeight: FontWeight.bold); 
+    return [
+      _lbl(LatLng(0.0037, -0.0034), "Classroom 113", s),
+      _lbl(LatLng(0.0037, -0.0016), "Classroom 114", s),
+      _lbl(LatLng(0.0037, -0.0001), "Classroom 115", s),
+      _lbl(LatLng(0.0037, 0.0013), "Classroom 116", s),
+      _lbl(LatLng(0.0037, 0.0034), "Classroom 117", s),
+      _lbl(LatLng(0.0011, -0.0053), "WashRoom Boys\nRoom 112", s),
+      _lbl(LatLng(0.0011, -0.0043), "Faculty Washroom\nRoom 111", s),
+      _lbl(LatLng(0.0011, -0.0033), "Faculty Room\nRoom 110", s),
+      _lbl(LatLng(-0.0003, -0.0038), "Computer Lab 2\nRoom 109", s),
+      _lbl(LatLng(0.0004, -0.0005), "Wifi Zone", s),
+      _lbl(LatLng(-0.0010, -0.0011), "Main Lift", s.copyWith(fontSize: 5)),
+      _lbl(LatLng(-0.0010, 0.0004), "Female Lift", s.copyWith(fontSize: 5)),
+      _lbl(LatLng(0.0011, 0.0021), "ERP Cell\nRoom 120", s),
+      _lbl(LatLng(0.0011, 0.0031), "Room 119", s),
+      _lbl(LatLng(0.0012, 0.0041), "WashRoom Girls\nRoom 118", s),
+      _lbl(LatLng(-0.0003, 0.0026), "Computer Lab 9\nRoom 121", s),
+      _lbl(LatLng(-0.0034, -0.0017), "Room 108\nServer Room", s),
+      _lbl(LatLng(0.0026, 0.0052), "Stair 2", s),
+    ];
+  }
+
+  Marker _lbl(LatLng p, String t, TextStyle s) => Marker(point: p, width: 110, height: 45, child: Center(child: Text(t.replaceAll("\\n", "\n"), style: s, textAlign: TextAlign.center)));
+
+  List<Marker> _buildStatusPins(BuildContext context) {
+    final appState = Provider.of<AppState>(context, listen: false);
+    return appState.venues.where((v) => v.level == 1).map((v) {
+      LatLng pos = LatLng(0,0);
+      if (v.code.contains('SH')) pos = LatLng(0.0037, 0.0034); 
+      if (v.code.contains('SP')) pos = LatLng(-0.0003, -0.0038); 
+      if (pos.latitude == 0) return Marker(point: LatLng(0,0), child: const SizedBox());
+      return Marker(point: pos, width: 12, height: 12, child: Container(decoration: BoxDecoration(color: v.isOccupied ? Colors.red : Colors.greenAccent, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1.5), boxShadow: [BoxShadow(color: v.isOccupied ? Colors.red : Colors.greenAccent, blurRadius: 8)])));
+    }).toList();
+  }
+
+  Widget _buildHeader(bool isDark) => Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+    Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('CAMPUS NAVIGATOR', style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 12, fontWeight: FontWeight.bold)),
+      Text('Blueprint: Back Wing', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+    ]),
+    IconButton(icon: const Icon(Icons.refresh, color: Colors.white), onPressed: () => _mapController.move(LatLng(0.0005, 0), 17.2)),
+  ]);
+
+  Widget _buildSearchField(AppState appState, bool isDark) => TextField(
+    controller: _searchController,
+    style: const TextStyle(color: Colors.white),
+    onChanged: (v) => appState.setSearchQuery(v),
+    decoration: const InputDecoration(hintText: 'Enter Room Number...', prefixIcon: Icon(Icons.search, color: Colors.white)),
+  );
+
+  Widget _buildVenueList(List<Venue> venues, AppState appState, bool isDark) => ListView.builder(
+    shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+    itemCount: venues.length,
+    itemBuilder: (c, i) => ListTile(
+      title: Text(venues[i].name, style: const TextStyle(color: Colors.white, fontSize: 14)),
+      subtitle: Text(venues[i].code, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+      trailing: const Icon(Icons.chevron_right, color: Colors.white38, size: 14),
+      onTap: () { appState.startNavigation(venues[i]); showModalBottomSheet(context: c, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (c) => const NavigationModal()); },
+    ),
+  );
 }
