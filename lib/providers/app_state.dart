@@ -1,7 +1,10 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+
 import '../models/venue.dart';
 import '../models/timetable_item.dart';
+import '../services/ai_timetable_service.dart';
 
 class AppState extends ChangeNotifier {
   // Theme Mode (Dark Theme by default, White Futuristic Theme optional)
@@ -14,10 +17,10 @@ class AppState extends ChangeNotifier {
   }
 
   // Auth State
-  bool _isLoggedIn = true;
-  String _userName = 'Alex Mercer';
-  String _studentId = 'SU-2026-8942';
-  final String _userDepartment = 'Computer Science & AI';
+  bool _isLoggedIn = false;
+  String _userName = '';
+  String _studentId = '';
+  final String _userDepartment = '';
 
   bool get isLoggedIn => _isLoggedIn;
   String get userName => _userName;
@@ -34,12 +37,12 @@ class AppState extends ChangeNotifier {
   }
 
   // Live Positioning & IPS System State
-  final String _currentBuilding = 'Tech Block A';
-  final int _currentLevel = 2;
-  String _activeBleAnchor = 'BLE-204-A (RSSI: -62 dBm)';
-  int _pdrStepCounter = 1420;
-  bool _isArucoCalibrated = true;
-  DateTime _lastArucoScanTime = DateTime.now().subtract(const Duration(minutes: 8));
+  final String _currentBuilding = '';
+  final int _currentLevel = 1;
+  String _activeBleAnchor = '';
+  int _pdrStepCounter = 0;
+  bool _isArucoCalibrated = false;
+  DateTime _lastArucoScanTime = DateTime.now();
 
   String get currentBuilding => _currentBuilding;
   int get currentLevel => _currentLevel;
@@ -84,12 +87,16 @@ class AppState extends ChangeNotifier {
 
   List<Venue> get filteredVenues {
     return _venues.where((v) {
-      final matchesQuery = _searchQuery.isEmpty ||
+      final matchesQuery =
+          _searchQuery.isEmpty ||
           v.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           v.code.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           v.building.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesLevel = _selectedLevelFilter == null || v.level == _selectedLevelFilter;
-      final matchesCategory = _selectedCategoryFilter == null || v.category == _selectedCategoryFilter;
+      final matchesLevel =
+          _selectedLevelFilter == null || v.level == _selectedLevelFilter;
+      final matchesCategory =
+          _selectedCategoryFilter == null ||
+          v.category == _selectedCategoryFilter;
       return matchesQuery && matchesLevel && matchesCategory;
     }).toList();
   }
@@ -99,20 +106,29 @@ class AppState extends ChangeNotifier {
   }
 
   // Timetable State & AI Vision Parsing
-  List<TimetableItem> _timetable = List.from(TimetableItem.sampleTimetable);
+  List<TimetableItem> _timetable = [];
   List<TimetableItem> get timetable => _timetable;
 
-  String? _selectedTimetableImageName = 'CS_Semester_4_Schedule_Scan.png';
+  String? _selectedTimetableImageName;
   String? get selectedTimetableImageName => _selectedTimetableImageName;
+
+  Uint8List? _selectedTimetableImageBytes;
+  Uint8List? get selectedTimetableImageBytes => _selectedTimetableImageBytes;
+
+  String? _selectedTimetableImagePath;
+  String? get selectedTimetableImagePath => _selectedTimetableImagePath;
 
   bool _isAnalyzingTimetable = false;
   bool get isAnalyzingTimetable => _isAnalyzingTimetable;
 
   String _aiAnalysisSummary =
-      'AI OCR Vision Complete: Image parsed successfully! 4 classes detected. Optimal route mapped avoiding Level 2 construction hallway.';
+      'No timetable image parsed yet. Upload an image to extract schedule.';
   String get aiAnalysisSummary => _aiAnalysisSummary;
 
+  TimetableItem? _activeScheduledClass;
+
   TimetableItem? get nextClass {
+    if (_activeScheduledClass != null) return _activeScheduledClass;
     final next = _timetable.where((t) => t.isNextClass).toList();
     if (next.isNotEmpty) return next.first;
     return _timetable.isNotEmpty ? _timetable.first : null;
@@ -120,8 +136,8 @@ class AppState extends ChangeNotifier {
 
   // Methods
   void login(String name, String id) {
-    _userName = name.isEmpty ? 'Alex Mercer' : name;
-    _studentId = id.isEmpty ? 'SU-2026-8942' : id;
+    _userName = name;
+    _studentId = id;
     _isLoggedIn = true;
     notifyListeners();
   }
@@ -161,51 +177,28 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // AI Timetable Image Parsing Simulation
-  Future<void> selectAndAnalyzeTimetableImage(String imageName) async {
+  // AI Timetable Image Parsing via Open-Source AI API (OpenRouter)
+  Future<void> selectAndAnalyzeTimetableImage(
+    String imageName, {
+    Uint8List? imageBytes,
+    String? imagePath,
+  }) async {
     _selectedTimetableImageName = imageName;
+    if (imageBytes != null) _selectedTimetableImageBytes = imageBytes;
+    if (imagePath != null) _selectedTimetableImagePath = imagePath;
+
     _isAnalyzingTimetable = true;
     notifyListeners();
 
-    await Future.delayed(const Duration(milliseconds: 2200));
+    final result = await AiTimetableService.analyzeTimetableImage(
+      imageName: imageName,
+      imageBytes: _selectedTimetableImageBytes,
+      imagePath: _selectedTimetableImagePath,
+    );
 
-    if (imageName.contains('Physics')) {
-      _timetable = [
-        const TimetableItem(
-          id: 't_img1',
-          courseCode: 'PHY-201',
-          courseTitle: 'Applied Physics & Quantum Optics',
-          venueCode: 'LH-201',
-          building: 'Tech Block A',
-          level: 2,
-          dayOfWeek: 'Monday',
-          startTime: '09:00 AM',
-          endTime: '10:30 AM',
-          instructor: 'Dr. Robert Oppen',
-          aiRecommendation: 'Arrive via Door 1. BLE Anchor locked.',
-          isNextClass: true,
-        ),
-        const TimetableItem(
-          id: 't_img2',
-          courseCode: 'MTH-301',
-          courseTitle: 'Linear Algebra & Kinematics',
-          venueCode: 'LAB-304',
-          building: 'Tech Block A',
-          level: 3,
-          dayOfWeek: 'Monday',
-          startTime: '11:00 AM',
-          endTime: '12:30 PM',
-          instructor: 'Prof. Katherine Johnson',
-          aiRecommendation: 'Stairs recommended due to floor 3 elevator wait time.',
-          isNextClass: false,
-        ),
-      ];
-      _aiAnalysisSummary =
-          'AI Vision Scan Success: Extracted Physics & Math Timetable Image. Mapped 2 classes with zero congestion delays.';
-    } else {
-      _aiAnalysisSummary =
-          'AI Vision OCR Analysis Complete: Image parsed successfully! Matched 4 courses with campus IMDF GeoJSON database.';
-    }
+    _timetable = result.extractedSchedule;
+    _aiAnalysisSummary = result.summary;
+    _activeScheduledClass = result.recommendedClass;
 
     _isAnalyzingTimetable = false;
     notifyListeners();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
@@ -40,7 +41,11 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                   borderRadius: 16,
                   isDark: isDark,
                 ),
-                child: Icon(Icons.meeting_room_outlined, color: AppTheme.emerald(isDark), size: 28),
+                child: Icon(
+                  Icons.meeting_room_outlined,
+                  color: AppTheme.emerald(isDark),
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -68,7 +73,10 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                         ),
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: AppTheme.emerald(isDark),
                             borderRadius: BorderRadius.circular(10),
@@ -144,16 +152,22 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.emerald(isDark).withValues(alpha: 0.25) : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
+          color: isSelected
+              ? AppTheme.emerald(isDark).withValues(alpha: 0.25)
+              : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? AppTheme.emerald(isDark) : AppTheme.emerald(isDark).withValues(alpha: 0.2),
+            color: isSelected
+                ? AppTheme.emerald(isDark)
+                : AppTheme.emerald(isDark).withValues(alpha: 0.2),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? AppTheme.emerald(isDark) : AppTheme.textSecondary(isDark),
+            color: isSelected
+                ? AppTheme.emerald(isDark)
+                : AppTheme.textSecondary(isDark),
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -162,13 +176,20 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
     );
   }
 
-  Widget _buildVacantVenueCard(BuildContext context, AppState appState, Venue venue, bool isDark) {
+  Widget _buildVacantVenueCard(
+    BuildContext context,
+    AppState appState,
+    Venue venue,
+    bool isDark,
+  ) {
     return GlassContainer(
       borderRadius: 20,
       borderColor: AppTheme.emerald(isDark).withValues(alpha: 0.5),
       gradientColors: [
         AppTheme.emerald(isDark).withValues(alpha: isDark ? 0.1 : 0.08),
-        (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85),
+        (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+          alpha: 0.85,
+        ),
       ],
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -182,7 +203,11 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                   color: AppTheme.emerald(isDark).withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.check_circle_rounded, color: AppTheme.emerald(isDark), size: 22),
+                child: Icon(
+                  Icons.check_circle_rounded,
+                  color: AppTheme.emerald(isDark),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -207,15 +232,22 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                     ),
                     Text(
                       '${venue.building} (Level ${venue.level})',
-                      style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11.5),
+                      style: TextStyle(
+                        color: AppTheme.textMuted(isDark),
+                        fontSize: 11.5,
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: (isDark ? AppTheme.darkBg : AppTheme.lightCard).withValues(alpha: 0.9),
+                  color: (isDark ? AppTheme.darkBg : AppTheme.lightCard)
+                      .withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -247,22 +279,34 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface).withValues(alpha: 0.8),
+              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface)
+                  .withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                Icon(Icons.access_time_filled_rounded, color: AppTheme.emerald(isDark), size: 16),
+                Icon(
+                  Icons.access_time_filled_rounded,
+                  color: AppTheme.emerald(isDark),
+                  size: 16,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     venue.currentActivity,
-                    style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 11.5),
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 11.5,
+                    ),
                   ),
                 ),
                 Text(
                   '${venue.distanceMeters.toInt()}m away',
-                  style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 11.5, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppTheme.cyan(isDark),
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -279,11 +323,16 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.15)),
+                  border: Border.all(
+                    color: AppTheme.cyan(isDark).withValues(alpha: 0.15),
+                  ),
                 ),
                 child: Text(
                   '# $tag',
-                  style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10),
+                  style: TextStyle(
+                    color: AppTheme.textMuted(isDark),
+                    fontSize: 10,
+                  ),
                 ),
               );
             }).toList(),
@@ -304,7 +353,11 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                   builder: (context) => const NavigationModal(),
                 );
               },
-              icon: const Icon(Icons.navigation_rounded, color: Colors.white, size: 18),
+              icon: const Icon(
+                Icons.navigation_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               label: const Text(
                 'NAVIGATE TO VACANT VENUE NOW',
                 style: TextStyle(
@@ -316,7 +369,9 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.emerald(isDark),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),

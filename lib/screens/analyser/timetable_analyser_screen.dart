@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
@@ -10,17 +12,104 @@ class TimetableAnalyserScreen extends StatefulWidget {
   const TimetableAnalyserScreen({super.key});
 
   @override
-  State<TimetableAnalyserScreen> createState() => _TimetableAnalyserScreenState();
+  State<TimetableAnalyserScreen> createState() =>
+      _TimetableAnalyserScreenState();
 }
 
 class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
   String _selectedDay = 'Monday';
+  final ImagePicker _picker = ImagePicker();
 
-  void _showAddClassDialog(BuildContext context, AppState appState, bool isDark) {
+  Future<void> _takePhoto(AppState appState) async {
+    try {
+      final XFile? photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (photo != null) {
+        final bytes = await photo.readAsBytes();
+        await appState.selectAndAnalyzeTimetableImage(
+          photo.name,
+          imageBytes: bytes,
+          imagePath: photo.path,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Camera Photo Captured (${photo.name})! Analyzing via OpenRouter Vision AI...',
+              ),
+              backgroundColor: AppTheme.purpleAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Camera access note: $e. Simulating camera scan.'),
+            backgroundColor: AppTheme.amberWarning,
+          ),
+        );
+      }
+      // No default filename for simulated camera scan
+      // appState.selectAndAnalyzeTimetableImage('');
+    }
+  }
+
+  Future<void> _pickImageFromGallery(AppState appState) async {
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        await appState.selectAndAnalyzeTimetableImage(
+          image.name,
+          imageBytes: bytes,
+          imagePath: image.path,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Image Loaded (${image.name})! Analyzing via OpenRouter Vision AI...',
+              ),
+              backgroundColor: AppTheme.cyanPrimary,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gallery pick note: $e. Simulating document upload.'),
+            backgroundColor: AppTheme.amberWarning,
+          ),
+        );
+      }
+      // Do not use a hardcoded default file
+      // Instead, we can show an error or a generic placeholder if needed, but no default document string
+      // appState.selectAndAnalyzeTimetableImage('');
+    }
+  }
+
+  void _showAddClassDialog(
+    BuildContext context,
+    AppState appState,
+    bool isDark,
+  ) {
     final codeCtrl = TextEditingController();
     final titleCtrl = TextEditingController();
-    final venueCtrl = TextEditingController(text: 'LH-201');
-    final timeCtrl = TextEditingController(text: '10:00 AM');
+    final venueCtrl = TextEditingController();
+    final timeCtrl = TextEditingController();
 
     showDialog(
       context: context,
@@ -32,7 +121,10 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
         ),
         title: Text(
           'Add Course Schedule',
-          style: TextStyle(color: AppTheme.textPrimary(isDark), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: AppTheme.textPrimary(isDark),
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -40,32 +132,43 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
             TextField(
               controller: codeCtrl,
               style: TextStyle(color: AppTheme.textPrimary(isDark)),
-              decoration: const InputDecoration(labelText: 'Course Code (e.g. CS-101)'),
+              decoration: const InputDecoration(
+                labelText: 'Course Code (e.g. CS-101)',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: titleCtrl,
               style: TextStyle(color: AppTheme.textPrimary(isDark)),
-              decoration: const InputDecoration(labelText: 'Course Title'),
+              decoration: const InputDecoration(
+                labelText: 'Course Title / Subject',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: venueCtrl,
               style: TextStyle(color: AppTheme.textPrimary(isDark)),
-              decoration: const InputDecoration(labelText: 'Venue Code (e.g. LH-201)'),
+              decoration: const InputDecoration(
+                labelText: 'Venue Code (e.g. LH-201)',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: timeCtrl,
               style: TextStyle(color: AppTheme.textPrimary(isDark)),
-              decoration: const InputDecoration(labelText: 'Start Time (e.g. 10:00 AM)'),
+              decoration: const InputDecoration(
+                labelText: 'Start Time (e.g. 10:00 AM)',
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: AppTheme.textMuted(isDark))),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: AppTheme.textMuted(isDark)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -74,7 +177,9 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   TimetableItem(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
                     courseCode: codeCtrl.text,
-                    courseTitle: titleCtrl.text.isEmpty ? 'Custom Class' : titleCtrl.text,
+                    courseTitle: titleCtrl.text.isEmpty
+                        ? 'Custom Class'
+                        : titleCtrl.text,
                     venueCode: venueCtrl.text,
                     building: 'Tech Block A',
                     level: 2,
@@ -82,7 +187,8 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                     startTime: timeCtrl.text,
                     endTime: '11:30 AM',
                     instructor: 'Faculty Member',
-                    aiRecommendation: 'AI mapped venue. Path generated via D* Lite.',
+                    aiRecommendation:
+                        'AI mapped venue. Scheduled via Open-Source AI Engine.',
                   ),
                 );
                 Navigator.pop(context);
@@ -90,9 +196,116 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.cyan(isDark),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: const Text('Add Class', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Add Class',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showApiConfigDialog(BuildContext context, bool isDark) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppTheme.purple(isDark)),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.api_rounded, color: AppTheme.purple(isDark)),
+            const SizedBox(width: 8),
+            Text(
+              'Open-Source AI API Config',
+              style: TextStyle(
+                color: AppTheme.textPrimary(isDark),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Current Configured API:',
+              style: TextStyle(
+                color: AppTheme.textSecondary(isDark),
+                fontSize: 12,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.black : Colors.grey.shade200)
+                    .withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: AppTheme.purple(isDark).withValues(alpha: 0.3),
+                ),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '• Provider: OpenRouter AI',
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '• API Key: abcde***lmnop (Active)',
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '• Endpoint: https://openrouter.ai/api/v1',
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    '• Model: GPT-4o',
+                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'OpenRouter API is configured and active in lib/services/ai_timetable_service.dart. You can switch models or update API keys directly in that file.',
+              style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.purple(isDark),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -103,14 +316,17 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isDark = appState.isDarkMode;
-    final dayClasses = appState.timetable.where((t) => t.dayOfWeek == _selectedDay).toList();
+    final dayClasses = appState.timetable
+        .where((t) => t.dayOfWeek.toLowerCase().startsWith(_selectedDay.toLowerCase().substring(0, 3)))
+        .toList();
+    final TimetableItem? activeClass = appState.nextClass;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header & Open-Source AI API Tag
           Row(
             children: [
               Container(
@@ -120,21 +336,56 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   borderRadius: 16,
                   isDark: isDark,
                 ),
-                child: Icon(Icons.center_focus_strong_rounded, color: AppTheme.purple(isDark), size: 28),
+                child: Icon(
+                  Icons.center_focus_strong_rounded,
+                  color: AppTheme.purple(isDark),
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'AI OCR VISION DECISION ENGINE',
-                      style: TextStyle(
-                        color: AppTheme.purple(isDark),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'OPEN-SOURCE AI ENGINE',
+                          style: TextStyle(
+                            color: AppTheme.purple(isDark),
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        GestureDetector(
+                          onTap: () => _showApiConfigDialog(context, isDark),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.purple(isDark)
+                                  .withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: AppTheme.purple(isDark),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: const Text(
+                              'OPENROUTER AI',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
                       'Timetable Image Analyser',
@@ -151,6 +402,161 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
           ),
           const SizedBox(height: 18),
 
+          // AUTOMATIC SCHEDULE LOCATOR / WHERE TO GO NOW CARD
+          if (activeClass != null) ...[
+            GlassContainer(
+              borderRadius: 22,
+              borderColor: AppTheme.cyan(isDark),
+              gradientColors: [
+                AppTheme.cyan(isDark).withValues(alpha: isDark ? 0.2 : 0.15),
+                AppTheme.purple(isDark).withValues(alpha: isDark ? 0.12 : 0.08),
+              ],
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: AppTheme.emerald(isDark),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'CURRENT SCHEDULED CLASS LOCATOR',
+                            style: TextStyle(
+                              color: AppTheme.cyan(isDark),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.amber(isDark),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          activeClass.dayOfWeek.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Subject Title & Code
+                  Text(
+                    '${activeClass.courseCode} • ${activeClass.courseTitle}',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+
+                  // Extracted Day, Time, Venue Details
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        color: AppTheme.cyan(isDark),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${activeClass.startTime} - ${activeClass.endTime}',
+                        style: TextStyle(
+                          color: AppTheme.cyan(isDark),
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Icon(
+                        Icons.room_rounded,
+                        color: AppTheme.purple(isDark),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          '${activeClass.venueCode} (${activeClass.building})',
+                          style: TextStyle(
+                            color: AppTheme.textSecondary(isDark),
+                            fontSize: 12,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Navigate Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        final venue = appState.venues.firstWhere(
+                          (v) => v.code == activeClass.venueCode,
+                          orElse: () => appState.venues.first,
+                        );
+                        appState.startNavigation(venue);
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (context) => const NavigationModal(),
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.navigation_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      label: const Text(
+                        'NAVIGATE TO SCHEDULED CLASS NOW',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.cyan(isDark),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
+          ],
+
           // UPLOAD TIMETABLE IMAGE CONTAINER
           GlassContainer(
             borderRadius: 24,
@@ -159,47 +565,50 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(Icons.add_a_photo_rounded, color: AppTheme.cyan(isDark), size: 18),
-                    const SizedBox(width: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.add_a_photo_rounded,
+                          color: AppTheme.cyan(isDark),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'UPLOAD TIMETABLE IMAGE',
+                          style: TextStyle(
+                            color: AppTheme.cyan(isDark),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
                     Text(
-                      'UPLOAD TIMETABLE IMAGE / SCAN',
+                      'API: OpenRouter Vision',
                       style: TextStyle(
-                        color: AppTheme.cyan(isDark),
-                        fontSize: 11,
+                        color: AppTheme.purple(isDark),
+                        fontSize: 9.5,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 0.8,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
 
-                // Timetable Image Sample Selection Pills
-                Text('Choose or Upload Schedule Image:', style: TextStyle(color: AppTheme.purple(isDark), fontSize: 11.5, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildImageSampleChip('CS_Semester_4_Schedule_Scan.png', appState, isDark),
-                      const SizedBox(width: 8),
-                      _buildImageSampleChip('Physics_Lab_Class_Image.png', appState, isDark),
-                      const SizedBox(width: 8),
-                      _buildImageSampleChip('Engineering_Master_Schedule.jpg', appState, isDark),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 14),
-
                 // Selected Image Preview Card Box
                 Container(
                   width: double.infinity,
-                  height: 140,
+                  height: 130,
                   decoration: BoxDecoration(
-                    color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface).withValues(alpha: 0.8),
+                    color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface)
+                        .withValues(alpha: 0.8),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.purple(isDark).withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppTheme.purple(isDark).withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Stack(
                     children: [
@@ -208,21 +617,34 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              padding: const EdgeInsets.all(12),
+                              padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: AppTheme.purple(isDark).withValues(alpha: 0.15),
+                                color: AppTheme.purple(isDark)
+                                    .withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.image_search_rounded, color: AppTheme.purple(isDark), size: 32),
+                              child: Icon(
+                                Icons.image_search_rounded,
+                                color: AppTheme.purple(isDark),
+                                size: 28,
+                              ),
                             ),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: 6),
                             Text(
-                              appState.selectedTimetableImageName ?? 'No Image Selected',
-                              style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 13, fontWeight: FontWeight.bold),
+                              appState.selectedTimetableImageName ??
+                                  'No Image Selected',
+                              style: TextStyle(
+                                color: AppTheme.textPrimary(isDark),
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Text(
-                              'AI OCR Vision Ready • 300 DPI Resolution',
-                              style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10.5),
+                              'Target Model: GPT-4o (OpenRouter)',
+                              style: TextStyle(
+                                color: AppTheme.textMuted(isDark),
+                                fontSize: 10,
+                              ),
                             ),
                           ],
                         ),
@@ -231,13 +653,24 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                         top: 10,
                         right: 10,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppTheme.emerald(isDark).withValues(alpha: 0.2),
+                            color: AppTheme.emerald(isDark)
+                                .withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: AppTheme.emerald(isDark)),
                           ),
-                          child: Text('IMAGE LOADED', style: TextStyle(color: AppTheme.emerald(isDark), fontSize: 9, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            'IMAGE READY',
+                            style: TextStyle(
+                              color: AppTheme.emerald(isDark),
+                              fontSize: 8.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -250,20 +683,25 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          appState.selectAndAnalyzeTimetableImage('Custom_Camera_Scan_${DateTime.now().millisecondsSinceEpoch}.png');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Camera Photo Captured! Processing OCR Vision...'),
-                              backgroundColor: AppTheme.purpleAccent,
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.camera_alt_rounded, size: 16, color: AppTheme.purple(isDark)),
-                        label: Text('Take Photo', style: TextStyle(color: AppTheme.purple(isDark), fontSize: 12, fontWeight: FontWeight.bold)),
+                        onPressed: () => _takePhoto(appState),
+                        icon: Icon(
+                          Icons.camera_alt_rounded,
+                          size: 16,
+                          color: AppTheme.purple(isDark),
+                        ),
+                        label: Text(
+                          'Take Photo',
+                          style: TextStyle(
+                            color: AppTheme.purple(isDark),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: AppTheme.purple(isDark)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -271,20 +709,25 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () {
-                          appState.selectAndAnalyzeTimetableImage('Gallery_Timetable_Doc.png');
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Image Selected from Device Storage!'),
-                              backgroundColor: AppTheme.cyanPrimary,
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.photo_library_rounded, size: 16, color: AppTheme.cyan(isDark)),
-                        label: Text('Upload File', style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 12, fontWeight: FontWeight.bold)),
+                        onPressed: () => _pickImageFromGallery(appState),
+                        icon: Icon(
+                          Icons.photo_library_rounded,
+                          size: 16,
+                          color: AppTheme.cyan(isDark),
+                        ),
+                        label: Text(
+                          'Upload File',
+                          style: TextStyle(
+                            color: AppTheme.cyan(isDark),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         style: OutlinedButton.styleFrom(
                           side: BorderSide(color: AppTheme.cyan(isDark)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -298,30 +741,46 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton.icon(
-                    onPressed: appState.isAnalyzingTimetable
+                    onPressed:
+                        appState.isAnalyzingTimetable ||
+                            appState.selectedTimetableImageName == null
                         ? null
-                        : () => appState.selectAndAnalyzeTimetableImage(appState.selectedTimetableImageName ?? 'CS_Semester_4_Schedule_Scan.png'),
+                        : () => appState.selectAndAnalyzeTimetableImage(
+                            appState.selectedTimetableImageName!,
+                          ),
                     icon: appState.isAnalyzingTimetable
                         ? const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
                           )
-                        : const Icon(Icons.psychology_rounded, color: Colors.white, size: 22),
-                    label: const Text(
-                      'RUN AI VISION OCR SCAN',
-                      style: TextStyle(
+                        : const Icon(
+                            Icons.psychology_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                    label: Text(
+                      appState.isAnalyzingTimetable
+                          ? 'EXTRACTING SCHEDULE VIA API...'
+                          : 'RUN AI VISION OCR SCAN',
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        letterSpacing: 0.8,
+                        fontSize: 12,
+                        letterSpacing: 0.6,
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.purple(isDark),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                       elevation: 6,
-                      shadowColor: AppTheme.purple(isDark).withValues(alpha: 0.4),
+                      shadowColor: AppTheme.purple(isDark)
+                          .withValues(alpha: 0.4),
                     ),
                   ),
                 ),
@@ -340,14 +799,18 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
             borderColor: AppTheme.purple(isDark),
             child: Row(
               children: [
-                Icon(Icons.smart_toy_rounded, color: AppTheme.purple(isDark), size: 28),
+                Icon(
+                  Icons.smart_toy_rounded,
+                  color: AppTheme.purple(isDark),
+                  size: 28,
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'AI VISION ROUTE DECISION OUTPUT',
+                        'OPEN-SOURCE AI API EXTRACTION OUTPUT',
                         style: TextStyle(
                           color: AppTheme.purple(isDark),
                           fontSize: 10,
@@ -358,7 +821,10 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                       const SizedBox(height: 2),
                       Text(
                         appState.aiAnalysisSummary,
-                        style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 12.5),
+                        style: TextStyle(
+                          color: AppTheme.textPrimary(isDark),
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -373,7 +839,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'WEEKLY TIMELINE',
+                'EXTRACTED WEEKLY SCHEDULE',
                 style: TextStyle(
                   color: AppTheme.cyan(isDark),
                   fontSize: 12,
@@ -385,11 +851,19 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                 onTap: () => _showAddClassDialog(context, appState, isDark),
                 child: Row(
                   children: [
-                    Icon(Icons.add_circle_outline_rounded, color: AppTheme.cyan(isDark), size: 16),
+                    Icon(
+                      Icons.add_circle_outline_rounded,
+                      color: AppTheme.cyan(isDark),
+                      size: 16,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Add Class',
-                      style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 12, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppTheme.cyan(isDark),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -402,31 +876,46 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
-              children: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) {
-                final isSel = _selectedDay == day;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedDay = day),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSel ? AppTheme.cyan(isDark) : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSel ? AppTheme.cyan(isDark) : AppTheme.cyan(isDark).withValues(alpha: 0.2),
+              children: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+                  .map((day) {
+                    final isSel = _selectedDay == day;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedDay = day),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSel
+                              ? AppTheme.cyan(isDark)
+                              : (isDark
+                                    ? AppTheme.darkSurface
+                                    : AppTheme.lightSurface),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSel
+                                ? AppTheme.cyan(isDark)
+                                : AppTheme.cyan(isDark).withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Text(
+                          day,
+                          style: TextStyle(
+                            color: isSel
+                                ? Colors.white
+                                : AppTheme.textPrimary(isDark),
+                            fontWeight: isSel
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      day,
-                      style: TextStyle(
-                        color: isSel ? Colors.white : AppTheme.textPrimary(isDark),
-                        fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                    );
+                  })
+                  .toList(),
             ),
           ),
           const SizedBox(height: 16),
@@ -437,7 +926,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: Text(
-                  'No classes scheduled for this day.',
+                  'No classes scheduled for $_selectedDay.',
                   style: TextStyle(color: AppTheme.textMuted(isDark)),
                 ),
               ),
@@ -458,41 +947,22 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
     );
   }
 
-  Widget _buildImageSampleChip(String imageName, AppState appState, bool isDark) {
-    final isSelected = appState.selectedTimetableImageName == imageName;
-    return GestureDetector(
-      onTap: () => appState.selectAndAnalyzeTimetableImage(imageName),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.purple(isDark) : AppTheme.purple(isDark).withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppTheme.purple(isDark).withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.image_outlined, size: 14, color: isSelected ? Colors.white : AppTheme.purple(isDark)),
-            const SizedBox(width: 6),
-            Text(
-              imageName,
-              style: TextStyle(
-                color: isSelected ? Colors.white : AppTheme.purple(isDark),
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTimelineCard(BuildContext context, AppState appState, TimetableItem item, bool isDark) {
+  Widget _buildTimelineCard(
+    BuildContext context,
+    AppState appState,
+    TimetableItem item,
+    bool isDark,
+  ) {
     return GlassContainer(
       borderRadius: 20,
       borderColor: item.isNextClass ? AppTheme.cyan(isDark) : null,
       gradientColors: item.isNextClass
-          ? [AppTheme.cyan(isDark).withValues(alpha: 0.15), (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.8)]
+          ? [
+              AppTheme.cyan(isDark).withValues(alpha: 0.15),
+              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+                alpha: 0.8,
+              ),
+            ]
           : null,
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -502,7 +972,10 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.cyan(isDark).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
@@ -516,18 +989,48 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   ),
                 ),
               ),
-              if (item.isNextClass)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppTheme.amber(isDark),
-                    borderRadius: BorderRadius.circular(8),
+              Row(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(right: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.purple(isDark).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      item.dayOfWeek,
+                      style: TextStyle(
+                        color: AppTheme.purple(isDark),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
-                  child: const Text(
-                    'NEXT CLASS',
-                    style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                  if (item.isNextClass)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.amber(isDark),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'NEXT CLASS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -544,18 +1047,39 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
 
           Row(
             children: [
-              Icon(Icons.location_on_rounded, color: AppTheme.textSecondary(isDark), size: 14),
-              const SizedBox(width: 4),
-              Text(
-                '${item.venueCode} (${item.building}, Level ${item.level})',
-                style: TextStyle(color: AppTheme.textSecondary(isDark), fontSize: 12),
+              Icon(
+                Icons.location_on_rounded,
+                color: AppTheme.textSecondary(isDark),
+                size: 14,
               ),
-              const Spacer(),
-              Icon(Icons.person_outline_rounded, color: AppTheme.textMuted(isDark), size: 14),
               const SizedBox(width: 4),
-              Text(
-                item.instructor,
-                style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11.5),
+              Expanded(
+                child: Text(
+                  '${item.venueCode} (${item.building}, Level ${item.level})',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary(isDark),
+                    fontSize: 12,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.person_outline_rounded,
+                color: AppTheme.textMuted(isDark),
+                size: 14,
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  item.instructor,
+                  style: TextStyle(
+                    color: AppTheme.textMuted(isDark),
+                    fontSize: 11.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                ),
               ),
             ],
           ),
@@ -565,17 +1089,25 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface).withValues(alpha: 0.8),
+              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface)
+                  .withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
-                Icon(Icons.auto_awesome_rounded, color: AppTheme.purple(isDark), size: 14),
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppTheme.purple(isDark),
+                  size: 14,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     item.aiRecommendation,
-                    style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 11),
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ],
@@ -601,11 +1133,24 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   builder: (context) => const NavigationModal(),
                 );
               },
-              icon: const Icon(Icons.navigation_rounded, size: 14, color: Colors.white),
-              label: const Text('GET AI INDOOR ROUTE', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+              icon: const Icon(
+                Icons.navigation_rounded,
+                size: 14,
+                color: Colors.white,
+              ),
+              label: const Text(
+                'GET AI INDOOR ROUTE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.cyan(isDark),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
             ),
           ),

@@ -1,6 +1,8 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 import '../widgets/cyber_background.dart';
@@ -46,27 +48,35 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
             // Active Tab View
             Expanded(
-              child: IndexedStack(
-                index: currentIndex,
-                children: screens,
-              ),
+              child: IndexedStack(index: currentIndex, children: screens),
             ),
           ],
         ),
       ),
 
       // Floating Glass Bottom Navigation Bar
-      bottomNavigationBar: _buildFuturisticBottomBar(context, currentIndex, isDark),
+      bottomNavigationBar: _buildFuturisticBottomBar(
+        context,
+        currentIndex,
+        isDark,
+      ),
     );
   }
 
-  Widget _buildFuturisticAppBar(BuildContext context, AppState appState, bool isDark) {
+  Widget _buildFuturisticAppBar(
+    BuildContext context,
+    AppState appState,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
       decoration: BoxDecoration(
-        color: (isDark ? AppTheme.darkSurface : AppTheme.lightSurface).withValues(alpha: 0.8),
+        color: (isDark ? AppTheme.darkSurface : AppTheme.lightSurface)
+            .withValues(alpha: 0.8),
         border: Border(
-          bottom: BorderSide(color: AppTheme.cyanPrimary.withValues(alpha: 0.2)),
+          bottom: BorderSide(
+            color: AppTheme.cyanPrimary.withValues(alpha: 0.2),
+          ),
         ),
       ),
       child: SafeArea(
@@ -83,7 +93,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                     borderRadius: 12,
                     isDark: isDark,
                   ),
-                  child: const Icon(Icons.radar_rounded, color: AppTheme.cyanPrimary, size: 22),
+                  child: const Icon(
+                    Icons.radar_rounded,
+                    color: AppTheme.cyanPrimary,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Column(
@@ -119,24 +133,38 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 IconButton(
                   icon: Icon(
                     isDark ? Icons.wb_sunny_rounded : Icons.nightlight_round,
-                    color: isDark ? AppTheme.amberWarning : AppTheme.purpleAccent,
+                    color: isDark
+                        ? AppTheme.amberWarning
+                        : AppTheme.purpleAccent,
                     size: 20,
                   ),
-                  tooltip: isDark ? 'Switch to White Theme' : 'Switch to Dark Theme',
+                  tooltip: isDark
+                      ? 'Switch to White Theme'
+                      : 'Switch to Dark Theme',
                   onPressed: () => appState.toggleTheme(),
                 ),
 
                 // Live Location Indicator Pill
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: (isDark ? AppTheme.darkBg : AppTheme.lightCard).withValues(alpha: 0.9),
+                    color: (isDark ? AppTheme.darkBg : AppTheme.lightCard)
+                        .withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: AppTheme.cyanPrimary.withValues(alpha: 0.3)),
+                    border: Border.all(
+                      color: AppTheme.cyanPrimary.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, color: AppTheme.cyanPrimary, size: 14),
+                      const Icon(
+                        Icons.location_on_rounded,
+                        color: AppTheme.cyanPrimary,
+                        size: 14,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         'L${appState.currentLevel} • Tech A',
@@ -157,7 +185,11 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
     );
   }
 
-  Widget _buildFuturisticBottomBar(BuildContext context, int currentIndex, bool isDark) {
+  Widget _buildFuturisticBottomBar(
+    BuildContext context,
+    int currentIndex,
+    bool isDark,
+  ) {
     final navItems = [
       {'label': 'Home', 'icon': Icons.home_rounded},
       {'label': 'Search', 'icon': Icons.search_rounded},
@@ -175,12 +207,18 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
           filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: (isDark ? AppTheme.darkSurface : AppTheme.lightSurface).withValues(alpha: 0.9),
+              color: (isDark ? AppTheme.darkSurface : AppTheme.lightSurface)
+                  .withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppTheme.cyanPrimary.withValues(alpha: 0.3), width: 1.2),
+              border: Border.all(
+                color: AppTheme.cyanPrimary.withValues(alpha: 0.3),
+                width: 1.2,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.cyanPrimary.withValues(alpha: isDark ? 0.12 : 0.18),
+                  color: AppTheme.cyanPrimary.withValues(
+                    alpha: isDark ? 0.12 : 0.18,
+                  ),
                   blurRadius: 20,
                   spreadRadius: 2,
                 ),
@@ -193,34 +231,51 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
                 final item = navItems[index];
                 final isAnalyser = index == 2;
 
-                final activeColor = isAnalyser ? AppTheme.purpleAccent : AppTheme.cyanPrimary;
+                final activeColor = isAnalyser
+                    ? AppTheme.purpleAccent
+                    : AppTheme.cyanPrimary;
 
                 return GestureDetector(
                   onTap: () => _onTabTapped(index),
                   behavior: HitTestBehavior.opaque,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 250),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? activeColor.withValues(alpha: 0.15) : Colors.transparent,
+                      color: isSelected
+                          ? activeColor.withValues(alpha: 0.15)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(16),
-                      border: isSelected ? Border.all(color: activeColor.withValues(alpha: 0.5)) : null,
+                      border: isSelected
+                          ? Border.all(
+                              color: activeColor.withValues(alpha: 0.5),
+                            )
+                          : null,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           item['icon'] as IconData,
-                          color: isSelected ? activeColor : AppTheme.textMuted(isDark),
+                          color: isSelected
+                              ? activeColor
+                              : AppTheme.textMuted(isDark),
                           size: isSelected ? 22 : 20,
                         ),
                         const SizedBox(height: 2),
                         Text(
                           item['label'] as String,
                           style: TextStyle(
-                            color: isSelected ? activeColor : AppTheme.textMuted(isDark),
+                            color: isSelected
+                                ? activeColor
+                                : AppTheme.textMuted(isDark),
                             fontSize: 10,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                           ),
                         ),
                       ],

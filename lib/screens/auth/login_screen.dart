@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/cyber_background.dart';
@@ -14,9 +15,9 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isSignUp = false;
-  final _idController = TextEditingController(text: 'SU-2026-8942');
-  final _nameController = TextEditingController(text: 'Alex Mercer');
-  final _passwordController = TextEditingController(text: '••••••••');
+  final _idController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
@@ -104,7 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Toggle Sign In vs Register
                       Container(
                         decoration: BoxDecoration(
-                          color: (isDark ? AppTheme.darkBg : AppTheme.lightCard).withValues(alpha: 0.6),
+                          color: (isDark ? AppTheme.darkBg : AppTheme.lightCard)
+                              .withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         padding: const EdgeInsets.all(4),
@@ -115,21 +117,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onTap: () => setState(() => _isSignUp = false),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 250),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: !_isSignUp
-                                        ? AppTheme.cyanPrimary.withValues(alpha: 0.2)
+                                        ? AppTheme.cyanPrimary.withValues(
+                                            alpha: 0.2,
+                                          )
                                         : Colors.transparent,
                                     borderRadius: BorderRadius.circular(12),
                                     border: !_isSignUp
-                                        ? Border.all(color: AppTheme.cyanPrimary.withValues(alpha: 0.5))
+                                        ? Border.all(
+                                            color: AppTheme.cyanPrimary
+                                                .withValues(alpha: 0.5),
+                                          )
                                         : null,
                                   ),
                                   child: Text(
                                     'SIGN IN',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: !_isSignUp ? AppTheme.cyanPrimary : AppTheme.textMuted(isDark),
+                                      color: !_isSignUp
+                                          ? AppTheme.cyanPrimary
+                                          : AppTheme.textMuted(isDark),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                       letterSpacing: 0.8,
@@ -143,21 +154,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                 onTap: () => setState(() => _isSignUp = true),
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 250),
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: _isSignUp
-                                        ? AppTheme.purpleAccent.withValues(alpha: 0.2)
+                                        ? AppTheme.purpleAccent.withValues(
+                                            alpha: 0.2,
+                                          )
                                         : Colors.transparent,
                                     borderRadius: BorderRadius.circular(12),
                                     border: _isSignUp
-                                        ? Border.all(color: AppTheme.purpleAccent.withValues(alpha: 0.5))
+                                        ? Border.all(
+                                            color: AppTheme.purpleAccent
+                                                .withValues(alpha: 0.5),
+                                          )
                                         : null,
                                   ),
                                   child: Text(
                                     'REGISTER',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: _isSignUp ? AppTheme.purpleAccent : AppTheme.textMuted(isDark),
+                                      color: _isSignUp
+                                          ? AppTheme.purpleAccent
+                                          : AppTheme.textMuted(isDark),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                       letterSpacing: 0.8,
@@ -178,7 +198,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(color: AppTheme.textPrimary(isDark)),
                           decoration: const InputDecoration(
                             labelText: 'Full Name',
-                            prefixIcon: Icon(Icons.person_outline_rounded, color: AppTheme.cyanPrimary),
+                            prefixIcon: Icon(
+                              Icons.person_outline_rounded,
+                              color: AppTheme.cyanPrimary,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -188,7 +211,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: AppTheme.textPrimary(isDark)),
                         decoration: const InputDecoration(
                           labelText: 'Student ID / Campus Email',
-                          prefixIcon: Icon(Icons.badge_outlined, color: AppTheme.cyanPrimary),
+                          prefixIcon: Icon(
+                            Icons.badge_outlined,
+                            color: AppTheme.cyanPrimary,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -198,13 +224,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: AppTheme.textPrimary(isDark)),
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppTheme.cyanPrimary),
+                          prefixIcon: const Icon(
+                            Icons.lock_outline_rounded,
+                            color: AppTheme.cyanPrimary,
+                          ),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              _obscurePassword
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
                               color: AppTheme.textMuted(isDark),
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                            onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                         ),
                       ),
@@ -217,12 +250,18 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: ElevatedButton(
                           onPressed: _handleAuth,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _isSignUp ? AppTheme.purpleAccent : AppTheme.cyanPrimary,
+                            backgroundColor: _isSignUp
+                                ? AppTheme.purpleAccent
+                                : AppTheme.cyanPrimary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                             elevation: 8,
-                            shadowColor: (_isSignUp ? AppTheme.purpleAccent : AppTheme.cyanPrimary).withValues(alpha: 0.4),
+                            shadowColor:
+                                (_isSignUp
+                                        ? AppTheme.purpleAccent
+                                        : AppTheme.cyanPrimary)
+                                    .withValues(alpha: 0.4),
                           ),
                           child: Text(
                             _isSignUp ? 'CREATE CAMPUS PASS' : 'AUTHENTICATE',
@@ -240,14 +279,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Biometric Fast Auth Shortcut
                       OutlinedButton.icon(
                         onPressed: _handleAuth,
-                        icon: const Icon(Icons.fingerprint_rounded, color: AppTheme.cyanPrimary),
+                        icon: const Icon(
+                          Icons.fingerprint_rounded,
+                          color: AppTheme.cyanPrimary,
+                        ),
                         label: const Text(
                           'Biometric Fast Key',
-                          style: TextStyle(color: AppTheme.cyanPrimary, fontSize: 13),
+                          style: TextStyle(
+                            color: AppTheme.cyanPrimary,
+                            fontSize: 13,
+                          ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppTheme.cyanPrimary.withValues(alpha: 0.4)),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          side: BorderSide(
+                            color: AppTheme.cyanPrimary.withValues(alpha: 0.4),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -261,7 +311,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 // Guest Mode Button
                 TextButton(
                   onPressed: () {
-                    final appState = Provider.of<AppState>(context, listen: false);
+                    final appState = Provider.of<AppState>(
+                      context,
+                      listen: false,
+                    );
                     appState.login('Guest Student', 'GUEST-9900');
                   },
                   child: Text(

@@ -27,62 +27,58 @@ class TimetableItem {
     this.isNextClass = false,
   });
 
-  static List<TimetableItem> sampleTimetable = const [
-    TimetableItem(
-      id: 't1',
-      courseCode: 'CS-302',
-      courseTitle: 'Data Structures & Algorithms',
-      venueCode: 'LH-201',
-      building: 'Tech Block A',
-      level: 2,
-      dayOfWeek: 'Monday',
-      startTime: '10:00 AM',
-      endTime: '11:30 AM',
-      instructor: 'Dr. Alan Vance',
-      aiRecommendation: 'Next class in 15 mins. Take Level 2 North Bridge (Estimated 2 min walk).',
-      isNextClass: true,
-    ),
-    TimetableItem(
-      id: 't2',
-      courseCode: 'AI-401',
-      courseTitle: 'Computer Vision & Kinematics',
-      venueCode: 'LAB-304',
-      building: 'Tech Block A',
-      level: 3,
-      dayOfWeek: 'Monday',
-      startTime: '01:00 PM',
-      endTime: '02:30 PM',
-      instructor: 'Prof. Maya Lin',
-      aiRecommendation: 'Floor 3 Elevator crowded around 12:50 PM. Stairs recommended.',
-      isNextClass: false,
-    ),
-    TimetableItem(
-      id: 't3',
-      courseCode: 'SE-204',
-      courseTitle: 'Human-Computer Interaction',
-      venueCode: 'SH-105',
-      building: 'Innovation Center',
-      level: 1,
-      dayOfWeek: 'Tuesday',
-      startTime: '09:00 AM',
-      endTime: '10:30 AM',
-      instructor: 'Dr. Marcus Vance',
-      aiRecommendation: 'Room opened 10 mins early for pre-lecture check-in.',
-      isNextClass: false,
-    ),
-    TimetableItem(
-      id: 't4',
-      courseCode: 'NET-301',
-      courseTitle: 'Wireless & Sensor Networks',
-      venueCode: 'LAB-202',
-      building: 'Tech Block B',
-      level: 2,
-      dayOfWeek: 'Wednesday',
-      startTime: '11:30 AM',
-      endTime: '01:00 PM',
-      instructor: 'Dr. Elena Rostova',
-      aiRecommendation: 'BLE anchor density high in Tech Block B for pinpoint indoor accuracy.',
-      isNextClass: false,
-    ),
-  ];
+  factory TimetableItem.fromJson(Map<String, dynamic> json, {String? id}) {
+    return TimetableItem(
+      id:
+          id ??
+          json['id']?.toString() ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
+      courseCode:
+          json['courseCode']?.toString() ??
+          json['code']?.toString() ??
+          'CS-101',
+      courseTitle:
+          json['courseTitle']?.toString() ??
+          json['subject']?.toString() ??
+          json['title']?.toString() ??
+          'General Lecture',
+      venueCode:
+          json['venueCode']?.toString() ??
+          json['venue']?.toString() ??
+          'LH-201',
+      building: json['building']?.toString() ?? 'Tech Block A',
+      level: json['level'] is int
+          ? json['level']
+          : int.tryParse(json['level']?.toString() ?? '2') ?? 2,
+      dayOfWeek:
+          json['dayOfWeek']?.toString() ?? json['day']?.toString() ?? 'Monday',
+      startTime:
+          json['startTime']?.toString() ??
+          json['time']?.toString() ??
+          '10:00 AM',
+      endTime: json['endTime']?.toString() ?? '11:30 AM',
+      instructor: json['instructor']?.toString() ?? 'Faculty Member',
+      aiRecommendation:
+          json['aiRecommendation']?.toString() ??
+          'Extracted via AI API Vision OCR.',
+      isNextClass: json['isNextClass'] == true,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'courseCode': courseCode,
+    'courseTitle': courseTitle,
+    'venueCode': venueCode,
+    'building': building,
+    'level': level,
+    'dayOfWeek': dayOfWeek,
+    'startTime': startTime,
+    'endTime': endTime,
+    'instructor': instructor,
+    'aiRecommendation': aiRecommendation,
+    'isNextClass': isNextClass,
+  };
+
+  static List<TimetableItem> sampleTimetable = const [];
 }

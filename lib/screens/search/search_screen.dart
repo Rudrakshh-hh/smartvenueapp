@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
@@ -74,7 +75,9 @@ class _SearchScreenState extends State<SearchScreen> {
                 decoration: BoxDecoration(
                   color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppTheme.cyan(isDark).withValues(alpha: 0.3),
+                  ),
                 ),
                 padding: const EdgeInsets.all(4),
                 child: Row(
@@ -82,14 +85,21 @@ class _SearchScreenState extends State<SearchScreen> {
                     GestureDetector(
                       onTap: () => setState(() => _showMapMode = true),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: _showMapMode ? AppTheme.cyan(isDark) : Colors.transparent,
+                          color: _showMapMode
+                              ? AppTheme.cyan(isDark)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
                           Icons.map_rounded,
-                          color: _showMapMode ? Colors.white : AppTheme.textMuted(isDark),
+                          color: _showMapMode
+                              ? Colors.white
+                              : AppTheme.textMuted(isDark),
                           size: 18,
                         ),
                       ),
@@ -97,14 +107,21 @@ class _SearchScreenState extends State<SearchScreen> {
                     GestureDetector(
                       onTap: () => setState(() => _showMapMode = false),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: !_showMapMode ? AppTheme.cyan(isDark) : Colors.transparent,
+                          color: !_showMapMode
+                              ? AppTheme.cyan(isDark)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
                           Icons.list_rounded,
-                          color: !_showMapMode ? Colors.white : AppTheme.textMuted(isDark),
+                          color: !_showMapMode
+                              ? Colors.white
+                              : AppTheme.textMuted(isDark),
                           size: 18,
                         ),
                       ),
@@ -126,10 +143,16 @@ class _SearchScreenState extends State<SearchScreen> {
             },
             decoration: InputDecoration(
               hintText: 'Search by room code, lecture hall, or lab name...',
-              prefixIcon: Icon(Icons.search_rounded, color: AppTheme.cyan(isDark)),
+              prefixIcon: Icon(
+                Icons.search_rounded,
+                color: AppTheme.cyan(isDark),
+              ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: Icon(Icons.clear_rounded, color: AppTheme.textMuted(isDark)),
+                      icon: Icon(
+                        Icons.clear_rounded,
+                        color: AppTheme.textMuted(isDark),
+                      ),
                       onPressed: () {
                         _searchController.clear();
                         appState.setSearchQuery('');
@@ -169,7 +192,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.layers_rounded, color: AppTheme.cyan(isDark), size: 18),
+                          Icon(
+                            Icons.layers_rounded,
+                            color: AppTheme.cyan(isDark),
+                            size: 18,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'IMDF LEVEL BLUEPRINT',
@@ -188,19 +215,32 @@ class _SearchScreenState extends State<SearchScreen> {
                         children: [1, 2, 3].map((floor) {
                           final isSel = _selectedFloorView == floor;
                           return GestureDetector(
-                            onTap: () => setState(() => _selectedFloorView = floor),
+                            onTap: () =>
+                                setState(() => _selectedFloorView = floor),
                             child: Container(
                               margin: const EdgeInsets.only(left: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: isSel ? AppTheme.cyan(isDark) : (isDark ? AppTheme.darkBg : AppTheme.lightCard),
+                                color: isSel
+                                    ? AppTheme.cyan(isDark)
+                                    : (isDark
+                                          ? AppTheme.darkBg
+                                          : AppTheme.lightCard),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.4)),
+                                border: Border.all(
+                                  color: AppTheme.cyan(isDark)
+                                      .withValues(alpha: 0.4),
+                                ),
                               ),
                               child: Text(
                                 'L$floor',
                                 style: TextStyle(
-                                  color: isSel ? Colors.white : AppTheme.textPrimary(isDark),
+                                  color: isSel
+                                      ? Colors.white
+                                      : AppTheme.textPrimary(isDark),
                                   fontSize: 10,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -220,12 +260,17 @@ class _SearchScreenState extends State<SearchScreen> {
                     decoration: BoxDecoration(
                       color: (isDark ? AppTheme.darkBg : AppTheme.lightCard),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.blue(isDark).withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: AppTheme.blue(isDark).withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Stack(
                       children: [
                         CustomPaint(
-                          painter: _IMDFInteractiveMapPainter(floorLevel: _selectedFloorView, isDark: isDark),
+                          painter: _IMDFInteractiveMapPainter(
+                            floorLevel: _selectedFloorView,
+                            isDark: isDark,
+                          ),
                           child: const SizedBox.expand(),
                         ),
 
@@ -315,23 +360,34 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildLevelChip(String label, int? level, AppState appState, bool isDark) {
+  Widget _buildLevelChip(
+    String label,
+    int? level,
+    AppState appState,
+    bool isDark,
+  ) {
     final isSelected = appState.selectedLevelFilter == level;
     return GestureDetector(
       onTap: () => appState.setLevelFilter(level),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.cyan(isDark).withValues(alpha: 0.25) : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
+          color: isSelected
+              ? AppTheme.cyan(isDark).withValues(alpha: 0.25)
+              : (isDark ? AppTheme.darkSurface : AppTheme.lightSurface),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? AppTheme.cyan(isDark) : AppTheme.cyan(isDark).withValues(alpha: 0.2),
+            color: isSelected
+                ? AppTheme.cyan(isDark)
+                : AppTheme.cyan(isDark).withValues(alpha: 0.2),
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? AppTheme.cyan(isDark) : AppTheme.textSecondary(isDark),
+            color: isSelected
+                ? AppTheme.cyan(isDark)
+                : AppTheme.textSecondary(isDark),
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -364,11 +420,14 @@ class _SearchScreenState extends State<SearchScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: isOccupied ? AppTheme.roseAlert.withValues(alpha: 0.85) : AppTheme.emeraldSuccess.withValues(alpha: 0.85),
+          color: isOccupied
+              ? AppTheme.roseAlert.withValues(alpha: 0.85)
+              : AppTheme.emeraldSuccess.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: (isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess).withValues(alpha: 0.4),
+              color: (isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess)
+                  .withValues(alpha: 0.4),
               blurRadius: 8,
             ),
           ],
@@ -376,11 +435,19 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.location_on_rounded, color: Colors.white, size: 12),
+            const Icon(
+              Icons.location_on_rounded,
+              color: Colors.white,
+              size: 12,
+            ),
             const SizedBox(width: 4),
             Text(
               roomCode,
-              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
@@ -388,7 +455,12 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildVenueCard(BuildContext context, AppState appState, Venue venue, bool isDark) {
+  Widget _buildVenueCard(
+    BuildContext context,
+    AppState appState,
+    Venue venue,
+    bool isDark,
+  ) {
     return GlassContainer(
       borderRadius: 18,
       padding: const EdgeInsets.all(16),
@@ -403,9 +475,15 @@ class _SearchScreenState extends State<SearchScreen> {
                 decoration: BoxDecoration(
                   color: AppTheme.cyan(isDark).withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppTheme.cyan(isDark).withValues(alpha: 0.3),
+                  ),
                 ),
-                child: Icon(Icons.meeting_room_rounded, color: AppTheme.cyan(isDark), size: 24),
+                child: Icon(
+                  Icons.meeting_room_rounded,
+                  color: AppTheme.cyan(isDark),
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -424,20 +502,29 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             color: venue.isOccupied
                                 ? AppTheme.roseAlert.withValues(alpha: 0.2)
-                                : AppTheme.emeraldSuccess.withValues(alpha: 0.2),
+                                : AppTheme.emeraldSuccess.withValues(
+                                    alpha: 0.2,
+                                  ),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: venue.isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess,
+                              color: venue.isOccupied
+                                  ? AppTheme.roseAlert
+                                  : AppTheme.emeraldSuccess,
                             ),
                           ),
                           child: Text(
                             venue.isOccupied ? 'OCCUPIED' : 'VACANT',
                             style: TextStyle(
-                              color: venue.isOccupied ? AppTheme.roseAlert : AppTheme.emeraldSuccess,
+                              color: venue.isOccupied
+                                  ? AppTheme.roseAlert
+                                  : AppTheme.emeraldSuccess,
                               fontSize: 9.5,
                               fontWeight: FontWeight.bold,
                             ),
@@ -455,7 +542,10 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                     Text(
                       '${venue.building} • Level ${venue.level} • ${venue.category}',
-                      style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11.5),
+                      style: TextStyle(
+                        color: AppTheme.textMuted(isDark),
+                        fontSize: 11.5,
+                      ),
                     ),
                   ],
                 ),
@@ -468,26 +558,38 @@ class _SearchScreenState extends State<SearchScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface).withValues(alpha: 0.8),
+              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface)
+                  .withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
                 Icon(
-                  venue.isOccupied ? Icons.info_outline : Icons.check_circle_outline,
+                  venue.isOccupied
+                      ? Icons.info_outline
+                      : Icons.check_circle_outline,
                   size: 14,
-                  color: venue.isOccupied ? AppTheme.amberWarning : AppTheme.emeraldSuccess,
+                  color: venue.isOccupied
+                      ? AppTheme.amberWarning
+                      : AppTheme.emeraldSuccess,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     venue.currentActivity,
-                    style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 11),
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 11,
+                    ),
                   ),
                 ),
                 Text(
                   '${venue.distanceMeters.toInt()}m away',
-                  style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: AppTheme.cyan(isDark),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
@@ -508,7 +610,11 @@ class _SearchScreenState extends State<SearchScreen> {
                   builder: (context) => const NavigationModal(),
                 );
               },
-              icon: const Icon(Icons.navigation_rounded, size: 16, color: Colors.white),
+              icon: const Icon(
+                Icons.navigation_rounded,
+                size: 16,
+                color: Colors.white,
+              ),
               label: const Text(
                 'NAVIGATE HERE',
                 style: TextStyle(
@@ -519,7 +625,9 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.cyan(isDark),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -557,32 +665,81 @@ class _IMDFInteractiveMapPainter extends CustomPainter {
       ..strokeWidth = 2.0;
 
     canvas.drawRRect(
-      RRect.fromLTRBR(15, 15, size.width - 15, size.height - 15, const Radius.circular(12)),
+      RRect.fromLTRBR(
+        15,
+        15,
+        size.width - 15,
+        size.height - 15,
+        const Radius.circular(12),
+      ),
       wallPaint,
     );
 
     // IMDF Room Corridors and Rooms
-    final roomFill = Paint()..color = (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85);
+    final roomFill = Paint()
+      ..color = (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+        alpha: 0.85,
+      );
     final roomOutline = Paint()
       ..color = AppTheme.blue(isDark).withValues(alpha: 0.35)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.2;
 
     // Room 1 (Turing Hall)
-    canvas.drawRRect(RRect.fromLTRBR(30, 30, 130, 90, const Radius.circular(6)), roomFill);
-    canvas.drawRRect(RRect.fromLTRBR(30, 30, 130, 90, const Radius.circular(6)), roomOutline);
+    canvas.drawRRect(
+      RRect.fromLTRBR(30, 30, 130, 90, const Radius.circular(6)),
+      roomFill,
+    );
+    canvas.drawRRect(
+      RRect.fromLTRBR(30, 30, 130, 90, const Radius.circular(6)),
+      roomOutline,
+    );
 
     // Room 2 (Robotics Lab)
-    canvas.drawRRect(RRect.fromLTRBR(size.width - 130, 30, size.width - 30, 90, const Radius.circular(6)), roomFill);
-    canvas.drawRRect(RRect.fromLTRBR(size.width - 130, 30, size.width - 30, 90, const Radius.circular(6)), roomOutline);
+    canvas.drawRRect(
+      RRect.fromLTRBR(
+        size.width - 130,
+        30,
+        size.width - 30,
+        90,
+        const Radius.circular(6),
+      ),
+      roomFill,
+    );
+    canvas.drawRRect(
+      RRect.fromLTRBR(
+        size.width - 130,
+        30,
+        size.width - 30,
+        90,
+        const Radius.circular(6),
+      ),
+      roomOutline,
+    );
 
     // Center Hallway / Elevator Zone
-    final elevFill = Paint()..color = AppTheme.purple(isDark).withValues(alpha: 0.2);
-    canvas.drawRRect(RRect.fromLTRBR(size.width / 2 - 35, 30, size.width / 2 + 35, 80, const Radius.circular(6)), elevFill);
+    final elevFill = Paint()
+      ..color = AppTheme.purple(isDark).withValues(alpha: 0.2);
+    canvas.drawRRect(
+      RRect.fromLTRBR(
+        size.width / 2 - 35,
+        30,
+        size.width / 2 + 35,
+        80,
+        const Radius.circular(6),
+      ),
+      elevFill,
+    );
 
     // Bottom Pods
-    canvas.drawRRect(RRect.fromLTRBR(80, 130, 200, 185, const Radius.circular(6)), roomFill);
-    canvas.drawRRect(RRect.fromLTRBR(80, 130, 200, 185, const Radius.circular(6)), roomOutline);
+    canvas.drawRRect(
+      RRect.fromLTRBR(80, 130, 200, 185, const Radius.circular(6)),
+      roomFill,
+    );
+    canvas.drawRRect(
+      RRect.fromLTRBR(80, 130, 200, 185, const Radius.circular(6)),
+      roomOutline,
+    );
   }
 
   @override
