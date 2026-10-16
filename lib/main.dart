@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_state.dart';
 import 'theme/app_theme.dart';
@@ -6,6 +7,16 @@ import 'screens/auth/login_screen.dart';
 import 'screens/main_navigation_shell.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Set system UI overlay style to match the dark theme
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.black,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => AppState(),
