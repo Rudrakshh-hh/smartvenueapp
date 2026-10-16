@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/app_state.dart';
+import '../../services/booking_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/navigation_modal.dart';
@@ -176,6 +177,66 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
     );
   }
 
+  void _handleBooking(BuildContext context, Venue venue) async {
+    // Show a loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final monitor = BookingOSMonitor();
+      
+      // Ensure capacity is registered in the OS monitor
+      // Normally this happens on app load, but we do it here for safety
+      monitor.registerVenueCapacity(venue.id, venue.capacity);
+
+      // Create an OS Process for the booking request
+      final process = BookingProcess(
+        userId: "USER_${DateTime.now().millisecondsSinceEpoch}", // Simulate unique user ID
+        venueId: venue.id,
+        timeSlot: DateTime.now(), // Real app would let user pick time
+      );
+
+      // Await OS-level FCFS mutex assignment
+      bool success = await monitor.requestBooking(process);
+
+      // Hide loading
+      if (context.mounted) Navigator.pop(context);
+
+      if (!context.mounted) return;
+
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Success: Venue ${venue.code} booked via FCFS Mutex!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed: Venue ${venue.code} reached capacity.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) Navigator.pop(context);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('OS Exception: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildVacantVenueCard(
     BuildContext context,
     AppState appState,
@@ -340,40 +401,74 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
           const SizedBox(height: 14),
 
           // Claim / Navigate Now Button
-          SizedBox(
-            width: double.infinity,
-            height: 44,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                appState.startNavigation(venue);
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const NavigationModal(),
-                );
-              },
-              icon: const Icon(
-                Icons.navigation_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-              label: const Text(
-                'NAVIGATE TO VACANT VENUE NOW',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _handleBooking(context, venue),
+                    icon: const Icon(
+                      Icons.book_online_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'BOOK NOW',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.blue(isDark),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.emerald(isDark),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SizedBox(
+                  height: 44,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      appState.startNavigation(venue);
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const NavigationModal(),
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.navigation_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      'NAVIGATE',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.emerald(isDark),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ],
       ),

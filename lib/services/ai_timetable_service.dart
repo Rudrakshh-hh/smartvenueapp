@@ -27,7 +27,7 @@ class AiAnalysisResult {
 /// to extract timing, day, subject, and venue from timetable images and schedule classes automatically.
 class AiTimetableService {
   // Configurable OpenRouter API Parameters
-  static const String apiKey = "abcdefghijklmnop";
+  static const String apiKey = "xyz";
   static const String apiEndpoint =
       "https://openrouter.ai/api/v1/chat/completions";
   static const String modelName =
@@ -61,7 +61,7 @@ Return ONLY a structured JSON array containing these objects without extra markd
   }) async {
     // Check if real API endpoint is supplied (or if placeholder "API HERE" is used)
     final bool isPlaceholderApi =
-        (apiEndpoint == "API HERE" || apiKey == "API HERE" || apiKey.isEmpty);
+    (apiEndpoint == "API HERE" || apiKey == "API HERE" || apiKey.isEmpty);
 
     if (!isPlaceholderApi) {
       try {
@@ -110,7 +110,7 @@ Return ONLY a structured JSON array containing these objects without extra markd
         if (parsedJson is Map && parsedJson.containsKey('choices')) {
           var contentRaw = parsedJson['choices'][0]['message']['content'];
           var contentText = contentRaw?.toString().trim() ?? '';
-          
+
           debugPrint("Raw AI Response: $contentText");
 
           if (contentText.contains('```')) {
@@ -127,9 +127,9 @@ Return ONLY a structured JSON array containing these objects without extra markd
           if (startIndex != -1 && endIndex != -1 && endIndex >= startIndex) {
             contentText = contentText.substring(startIndex, endIndex + 1);
           }
-          
+
           if (contentText.isEmpty || contentText == 'null') {
-             throw Exception("AI returned empty or null content.");
+            throw Exception("AI returned empty or null content.");
           }
 
           try {
@@ -139,12 +139,12 @@ Return ONLY a structured JSON array containing these objects without extra markd
                 extractedList.add(TimetableItem.fromJson(decoded[i], id: 'ai_$i'));
               }
             } else {
-               throw Exception("AI did not return a JSON array as requested.");
+              throw Exception("AI did not return a JSON array as requested.");
             }
           } catch (e) {
             // Check if the error is just an unterminated string (AI cut off early)
             if (e.toString().contains("Unterminated string") || e.toString().contains("Unexpected end of input")) {
-               throw Exception("AI output was too long and cut off. Please upgrade your API key limit or scan a smaller image.");
+              throw Exception("AI output was too long and cut off. Please upgrade your API key limit or scan a smaller image.");
             }
             throw Exception("Failed to parse AI JSON: $e");
           }
@@ -159,7 +159,7 @@ Return ONLY a structured JSON array containing these objects without extra markd
           return AiAnalysisResult(
             extractedSchedule: extractedList,
             summary:
-                'Successfully extracted ${extractedList.length} classes via OpenRouter API ($modelName).',
+            'Successfully extracted ${extractedList.length} classes via OpenRouter API ($modelName).',
             recommendedClass: recommended,
             rawResponse: responseBody,
             apiName: "OpenRouter Vision API",
@@ -176,15 +176,15 @@ Return ONLY a structured JSON array containing these objects without extra markd
       } catch (e) {
         debugPrint("OpenRouter Vision API call note: $e.");
         String userFriendlyError = "Cannot scan image. The AI engine encountered an error.";
-        
+
         if (e.toString().contains("credit") || e.toString().contains("tokens")) {
-             userFriendlyError = "Cannot scan image. API token limit reached or free credits exhausted.";
+          userFriendlyError = "Cannot scan image. API token limit reached or free credits exhausted.";
         } else if (e.toString().contains("Unterminated") || e.toString().contains("Unexpected end")) {
-             userFriendlyError = "Cannot scan image. The timetable is too large for the current API tier.";
+          userFriendlyError = "Cannot scan image. The timetable is too large for the current API tier.";
         } else if (e.toString().contains("SocketException") || e.toString().contains("TimeoutException")) {
-             userFriendlyError = "Cannot scan image. Network connection to AI server timed out.";
+          userFriendlyError = "Cannot scan image. Network connection to AI server timed out.";
         }
-        
+
         return AiAnalysisResult(
           extractedSchedule: [],
           summary: userFriendlyError,
@@ -202,7 +202,7 @@ Return ONLY a structured JSON array containing these objects without extra markd
     return AiAnalysisResult(
       extractedSchedule: [],
       summary:
-          'OpenRouter Engine failed to parse "$imageName" or no API key provided.',
+      'OpenRouter Engine failed to parse "$imageName" or no API key provided.',
       recommendedClass: null,
       rawResponse: '{"status": "error", "message": "API key missing or failed to parse"}',
       apiName: "OpenRouter Vision API",
@@ -211,9 +211,9 @@ Return ONLY a structured JSON array containing these objects without extra markd
 
   /// Automatically calculates which class the user needs to attend at a particular time or day.
   static TimetableItem? getNextScheduledClass(
-    List<TimetableItem> items, {
-    DateTime? currentTime,
-  }) {
+      List<TimetableItem> items, {
+        DateTime? currentTime,
+      }) {
     if (items.isEmpty) return null;
 
     final now = currentTime ?? DateTime.now();

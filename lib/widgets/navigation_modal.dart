@@ -169,24 +169,32 @@ class _NavigationModalState extends State<NavigationModal>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.bluetooth_audio_rounded,
-                            size: 14,
-                            color: AppTheme.cyanPrimary,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            appState.activeBleAnchor,
-                            style: TextStyle(
-                              color: AppTheme.textMuted(isDark),
-                              fontSize: 11,
+                      Expanded(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.bluetooth_audio_rounded,
+                              size: 14,
+                              color: AppTheme.cyanPrimary,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                appState.activeBleAnchor,
+                                style: TextStyle(
+                                  color: AppTheme.textMuted(isDark),
+                                  fontSize: 11,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           const Icon(
                             Icons.directions_walk_rounded,

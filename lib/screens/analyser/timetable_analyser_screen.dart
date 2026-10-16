@@ -267,7 +267,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '• API Key: abcde***lmnop (Active)',
+                    '• API Key: sk-or-v1-***65b02 (Active)',
                     style: TextStyle(fontFamily: 'monospace', fontSize: 11),
                   ),
                   SizedBox(height: 4),
@@ -277,7 +277,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '• Model: GPT-4o',
+                    '• Model: Nemotron-3.5-Super-VL (Free)',
                     style: TextStyle(fontFamily: 'monospace', fontSize: 11),
                   ),
                 ],
@@ -640,7 +640,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                               ),
                             ),
                             Text(
-                              'Target Model: GPT-4o (OpenRouter)',
+                              'Target Model: Nemotron-3.5-Super-VL (OpenRouter)',
                               style: TextStyle(
                                 color: AppTheme.textMuted(isDark),
                                 fontSize: 10,
