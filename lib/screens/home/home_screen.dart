@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
@@ -8,10 +9,7 @@ import '../../widgets/navigation_modal.dart';
 class HomeScreen extends StatelessWidget {
   final Function(int tabIndex) onNavigateToTab;
 
-  const HomeScreen({
-    super.key,
-    required this.onNavigateToTab,
-  });
+  const HomeScreen({super.key, required this.onNavigateToTab});
 
   @override
   Widget build(BuildContext context) {
@@ -55,12 +53,20 @@ class HomeScreen extends StatelessWidget {
   }
 
   // HERO SECTION (CONTAINER 1)
-  Widget _buildHeroSection(BuildContext context, AppState appState, bool isDark) {
+  Widget _buildHeroSection(
+    BuildContext context,
+    AppState appState,
+    bool isDark,
+  ) {
     return GlassContainer(
       borderRadius: 24,
       gradientColors: [
-        (isDark ? AppTheme.darkSurface : AppTheme.lightSurface).withValues(alpha: isDark ? 0.9 : 0.95),
-        (isDark ? AppTheme.darkCard : AppTheme.lightCard).withValues(alpha: isDark ? 0.7 : 0.85),
+        (isDark ? AppTheme.darkSurface : AppTheme.lightSurface).withValues(
+          alpha: isDark ? 0.9 : 0.95,
+        ),
+        (isDark ? AppTheme.darkCard : AppTheme.lightCard).withValues(
+          alpha: isDark ? 0.7 : 0.85,
+        ),
       ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +103,10 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: AppTheme.neonGlowDecoration(
                   color: AppTheme.emerald(isDark),
                   borderRadius: 20,
@@ -106,7 +115,11 @@ class HomeScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.circle, color: AppTheme.emerald(isDark), size: 8),
+                    Icon(
+                      Icons.circle,
+                      color: AppTheme.emerald(isDark),
+                      size: 8,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'IPS ACTIVE',
@@ -123,7 +136,12 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          Divider(color: (isDark ? Colors.white : Colors.black12).withValues(alpha: 0.1), height: 1),
+          Divider(
+            color: (isDark ? Colors.white : Colors.black12).withValues(
+              alpha: 0.1,
+            ),
+            height: 1,
+          ),
           const SizedBox(height: 12),
 
           // Live Position Pill & IPS Status
@@ -132,16 +150,30 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(Icons.my_location_rounded, color: AppTheme.cyan(isDark), size: 18),
+                    Icon(
+                      Icons.my_location_rounded,
+                      color: AppTheme.cyan(isDark),
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Current Zone', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10)),
+                          Text(
+                            'Current Zone',
+                            style: TextStyle(
+                              color: AppTheme.textMuted(isDark),
+                              fontSize: 10,
+                            ),
+                          ),
                           Text(
                             '${appState.currentBuilding} (L${appState.currentLevel})',
-                            style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 12.5, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppTheme.textPrimary(isDark),
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -155,16 +187,30 @@ class HomeScreen extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    Icon(Icons.sensors_rounded, color: AppTheme.purple(isDark), size: 18),
+                    Icon(
+                      Icons.sensors_rounded,
+                      color: AppTheme.purple(isDark),
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Fused Hardware', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10)),
+                          Text(
+                            'Fused Hardware',
+                            style: TextStyle(
+                              color: AppTheme.textMuted(isDark),
+                              fontSize: 10,
+                            ),
+                          ),
                           Text(
                             'BLE + PDR + ArUco',
-                            style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 12.5, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: AppTheme.textPrimary(isDark),
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.bold,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -182,7 +228,12 @@ class HomeScreen extends StatelessWidget {
   }
 
   // NEXT CLASS TO ATTEND CONTAINER (CONTAINER 2)
-  Widget _buildNextClassContainer(BuildContext context, AppState appState, nextClass, bool isDark) {
+  Widget _buildNextClassContainer(
+    BuildContext context,
+    AppState appState,
+    nextClass,
+    bool isDark,
+  ) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
@@ -192,7 +243,10 @@ class HomeScreen extends StatelessWidget {
             AppTheme.purple(isDark).withValues(alpha: isDark ? 0.12 : 0.18),
           ],
         ),
-        border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.4), width: 1.2),
+        border: Border.all(
+          color: AppTheme.cyan(isDark).withValues(alpha: 0.4),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
             color: AppTheme.cyan(isDark).withValues(alpha: isDark ? 0.15 : 0.1),
@@ -217,7 +271,11 @@ class HomeScreen extends StatelessWidget {
                         color: AppTheme.cyan(isDark),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.schedule_rounded, color: Colors.white, size: 16),
+                      child: const Icon(
+                        Icons.schedule_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -238,11 +296,16 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppTheme.amber(isDark).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.amber(isDark).withValues(alpha: 0.6)),
+                  border: Border.all(
+                    color: AppTheme.amber(isDark).withValues(alpha: 0.6),
+                  ),
                 ),
                 child: Text(
                   'IN 15 MINS',
@@ -272,22 +335,36 @@ class HomeScreen extends StatelessWidget {
 
           Row(
             children: [
-              Icon(Icons.room_outlined, color: AppTheme.textSecondary(isDark), size: 16),
+              Icon(
+                Icons.room_outlined,
+                color: AppTheme.textSecondary(isDark),
+                size: 16,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   '${nextClass.venueCode} • ${nextClass.building} (L${nextClass.level})',
-                  style: TextStyle(color: AppTheme.textSecondary(isDark), fontSize: 12),
+                  style: TextStyle(
+                    color: AppTheme.textSecondary(isDark),
+                    fontSize: 12,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.access_time_rounded, color: AppTheme.textSecondary(isDark), size: 16),
+              Icon(
+                Icons.access_time_rounded,
+                color: AppTheme.textSecondary(isDark),
+                size: 16,
+              ),
               const SizedBox(width: 4),
               Text(
                 '${nextClass.startTime} - ${nextClass.endTime}',
-                style: TextStyle(color: AppTheme.textSecondary(isDark), fontSize: 12),
+                style: TextStyle(
+                  color: AppTheme.textSecondary(isDark),
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
@@ -297,18 +374,28 @@ class HomeScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface).withValues(alpha: 0.8),
+              color: (isDark ? AppTheme.darkBg : AppTheme.lightSurface)
+                  .withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.25)),
+              border: Border.all(
+                color: AppTheme.cyan(isDark).withValues(alpha: 0.25),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.auto_awesome_rounded, color: AppTheme.cyan(isDark), size: 18),
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  color: AppTheme.cyan(isDark),
+                  size: 18,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     nextClass.aiRecommendation,
-                    style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 11),
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 11,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -336,7 +423,11 @@ class HomeScreen extends StatelessWidget {
                   builder: (context) => const NavigationModal(),
                 );
               },
-              icon: const Icon(Icons.navigation_rounded, color: Colors.white, size: 18),
+              icon: const Icon(
+                Icons.navigation_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
               label: const Text(
                 'START INDOOR NAVIGATION (D* LITE)',
                 style: TextStyle(
@@ -348,7 +439,9 @@ class HomeScreen extends StatelessWidget {
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.cyan(isDark),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 elevation: 4,
                 shadowColor: AppTheme.cyan(isDark).withValues(alpha: 0.4),
               ),
@@ -373,7 +466,10 @@ class HomeScreen extends StatelessWidget {
             Expanded(
               child: Text(
                 'Search venues, labs, halls or room code...',
-                style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 13.5),
+                style: TextStyle(
+                  color: AppTheme.textMuted(isDark),
+                  fontSize: 13.5,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -384,7 +480,11 @@ class HomeScreen extends StatelessWidget {
                 color: AppTheme.cyan(isDark).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(Icons.tune_rounded, color: AppTheme.cyan(isDark), size: 18),
+              child: Icon(
+                Icons.tune_rounded,
+                color: AppTheme.cyan(isDark),
+                size: 18,
+              ),
             ),
           ],
         ),
@@ -393,7 +493,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   // FIND VENUE & FIND EMPTY VENUE CONTAINERS
-  Widget _buildFindVenueAndEmptyRow(BuildContext context, AppState appState, bool isDark) {
+  Widget _buildFindVenueAndEmptyRow(
+    BuildContext context,
+    AppState appState,
+    bool isDark,
+  ) {
     final emptyCount = appState.availableVacantVenues.length;
 
     return Row(
@@ -405,7 +509,9 @@ class HomeScreen extends StatelessWidget {
             onTap: () => onNavigateToTab(1),
             gradientColors: [
               AppTheme.blue(isDark).withValues(alpha: isDark ? 0.2 : 0.15),
-              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85),
+              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+                alpha: 0.85,
+              ),
             ],
             borderColor: AppTheme.blue(isDark).withValues(alpha: 0.4),
             padding: const EdgeInsets.all(14),
@@ -418,7 +524,11 @@ class HomeScreen extends StatelessWidget {
                     color: AppTheme.blue(isDark).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.map_rounded, color: AppTheme.blue(isDark), size: 22),
+                  child: Icon(
+                    Icons.map_rounded,
+                    color: AppTheme.blue(isDark),
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -432,7 +542,10 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'IMDF Plans & 3D Maps',
-                  style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10.5),
+                  style: TextStyle(
+                    color: AppTheme.textMuted(isDark),
+                    fontSize: 10.5,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -449,7 +562,9 @@ class HomeScreen extends StatelessWidget {
             onTap: () => onNavigateToTab(3),
             gradientColors: [
               AppTheme.emerald(isDark).withValues(alpha: isDark ? 0.2 : 0.15),
-              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85),
+              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+                alpha: 0.85,
+              ),
             ],
             borderColor: AppTheme.emerald(isDark).withValues(alpha: 0.4),
             padding: const EdgeInsets.all(14),
@@ -465,10 +580,17 @@ class HomeScreen extends StatelessWidget {
                         color: AppTheme.emerald(isDark).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.meeting_room_outlined, color: AppTheme.emerald(isDark), size: 22),
+                      child: Icon(
+                        Icons.meeting_room_outlined,
+                        color: AppTheme.emerald(isDark),
+                        size: 22,
+                      ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: AppTheme.emerald(isDark),
                         borderRadius: BorderRadius.circular(8),
@@ -496,7 +618,10 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Real-time Vacant Spaces',
-                  style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10.5),
+                  style: TextStyle(
+                    color: AppTheme.textMuted(isDark),
+                    fontSize: 10.5,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -509,7 +634,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   // QUICK ACCESS GRID
-  Widget _buildQuickAccessSection(BuildContext context, AppState appState, bool isDark) {
+  Widget _buildQuickAccessSection(
+    BuildContext context,
+    AppState appState,
+    bool isDark,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -542,7 +671,9 @@ class HomeScreen extends StatelessWidget {
                 appState.triggerArUcoRecalibration();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: const Text('ArUco Camera Vision Scan Completed! Position calibrated.'),
+                    content: const Text(
+                      'ArUco Camera Vision Scan Completed! Position calibrated.',
+                    ),
                     backgroundColor: AppTheme.cyan(isDark),
                   ),
                 );
@@ -623,7 +754,10 @@ class HomeScreen extends StatelessWidget {
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 9.5),
+                  style: TextStyle(
+                    color: AppTheme.textMuted(isDark),
+                    fontSize: 9.5,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -636,7 +770,11 @@ class HomeScreen extends StatelessWidget {
   }
 
   // RECENT SEARCHES CONTAINER
-  Widget _buildRecentSearchesSection(BuildContext context, AppState appState, bool isDark) {
+  Widget _buildRecentSearchesSection(
+    BuildContext context,
+    AppState appState,
+    bool isDark,
+  ) {
     if (appState.recentSearches.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -658,7 +796,10 @@ class HomeScreen extends StatelessWidget {
               onTap: () => appState.clearRecentSearches(),
               child: Text(
                 'Clear All',
-                style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11),
+                style: TextStyle(
+                  color: AppTheme.textMuted(isDark),
+                  fontSize: 11,
+                ),
               ),
             ),
           ],
@@ -674,20 +815,32 @@ class HomeScreen extends StatelessWidget {
                 onNavigateToTab(1);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppTheme.cyan(isDark).withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: AppTheme.cyan(isDark).withValues(alpha: 0.2),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.history_rounded, color: AppTheme.textMuted(isDark), size: 14),
+                    Icon(
+                      Icons.history_rounded,
+                      color: AppTheme.textMuted(isDark),
+                      size: 14,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       term,
-                      style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 12),
+                      style: TextStyle(
+                        color: AppTheme.textPrimary(isDark),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

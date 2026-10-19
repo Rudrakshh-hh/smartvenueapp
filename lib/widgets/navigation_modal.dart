@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 import 'glass_container.dart';
@@ -70,13 +71,19 @@ class _NavigationModalState extends State<NavigationModal>
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: AppTheme.neonGlowDecoration(
-                    color: isArrived ? AppTheme.emeraldSuccess : AppTheme.cyanPrimary,
+                    color: isArrived
+                        ? AppTheme.emeraldSuccess
+                        : AppTheme.cyanPrimary,
                     borderRadius: 14,
                     isDark: isDark,
                   ),
                   child: Icon(
-                    isArrived ? Icons.check_circle_rounded : Icons.navigation_rounded,
-                    color: isArrived ? AppTheme.emeraldSuccess : AppTheme.cyanPrimary,
+                    isArrived
+                        ? Icons.check_circle_rounded
+                        : Icons.navigation_rounded,
+                    color: isArrived
+                        ? AppTheme.emeraldSuccess
+                        : AppTheme.cyanPrimary,
                     size: 26,
                   ),
                 ),
@@ -86,9 +93,13 @@ class _NavigationModalState extends State<NavigationModal>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isArrived ? 'ARRIVED AT DESTINATION' : 'LIVE IPS INDOOR ROUTING',
+                        isArrived
+                            ? 'ARRIVED AT DESTINATION'
+                            : 'LIVE IPS INDOOR ROUTING',
                         style: TextStyle(
-                          color: isArrived ? AppTheme.emeraldSuccess : AppTheme.cyanPrimary,
+                          color: isArrived
+                              ? AppTheme.emeraldSuccess
+                              : AppTheme.cyanPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
@@ -115,7 +126,10 @@ class _NavigationModalState extends State<NavigationModal>
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close_rounded, color: AppTheme.textMuted(isDark)),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: AppTheme.textMuted(isDark),
+                  ),
                   onPressed: () => appState.stopNavigation(),
                 ),
               ],
@@ -136,7 +150,13 @@ class _NavigationModalState extends State<NavigationModal>
                       builder: (context, child) {
                         return CustomPaint(
                           painter: _IndoorRouteCanvasPainter(
-                            progress: 1.0 - (appState.navDistanceRemaining / (venue.distanceMeters > 0 ? venue.distanceMeters : 1.0)).clamp(0.0, 1.0),
+                            progress:
+                                1.0 -
+                                (appState.navDistanceRemaining /
+                                        (venue.distanceMeters > 0
+                                            ? venue.distanceMeters
+                                            : 1.0))
+                                    .clamp(0.0, 1.0),
                             pulse: _pulseController.value,
                             isArrived: isArrived,
                             isDark: isDark,
@@ -149,23 +169,45 @@ class _NavigationModalState extends State<NavigationModal>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.bluetooth_audio_rounded, size: 14, color: AppTheme.cyanPrimary),
-                          const SizedBox(width: 4),
-                          Text(
-                            appState.activeBleAnchor,
-                            style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11),
-                          ),
-                        ],
+                      Expanded(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.bluetooth_audio_rounded,
+                              size: 14,
+                              color: AppTheme.cyanPrimary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                appState.activeBleAnchor,
+                                style: TextStyle(
+                                  color: AppTheme.textMuted(isDark),
+                                  fontSize: 11,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.directions_walk_rounded, size: 14, color: AppTheme.purpleAccent),
+                          const Icon(
+                            Icons.directions_walk_rounded,
+                            size: 14,
+                            color: AppTheme.purpleAccent,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             'PDR Step: ${appState.pdrStepCounter}',
-                            style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11),
+                            style: TextStyle(
+                              color: AppTheme.textMuted(isDark),
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
@@ -181,18 +223,35 @@ class _NavigationModalState extends State<NavigationModal>
               children: [
                 Expanded(
                   child: GlassContainer(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     child: Row(
                       children: [
-                        const Icon(Icons.straighten_rounded, color: AppTheme.cyanPrimary, size: 22),
+                        const Icon(
+                          Icons.straighten_rounded,
+                          color: AppTheme.cyanPrimary,
+                          size: 22,
+                        ),
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Distance Left', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11)),
+                            Text(
+                              'Distance Left',
+                              style: TextStyle(
+                                color: AppTheme.textMuted(isDark),
+                                fontSize: 11,
+                              ),
+                            ),
                             Text(
                               '${appState.navDistanceRemaining.toInt()} m',
-                              style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: AppTheme.textPrimary(isDark),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -203,18 +262,35 @@ class _NavigationModalState extends State<NavigationModal>
                 const SizedBox(width: 12),
                 Expanded(
                   child: GlassContainer(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     child: Row(
                       children: [
-                        const Icon(Icons.timer_outlined, color: AppTheme.purpleAccent, size: 22),
+                        const Icon(
+                          Icons.timer_outlined,
+                          color: AppTheme.purpleAccent,
+                          size: 22,
+                        ),
                         const SizedBox(width: 10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Est. Arrival', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11)),
+                            Text(
+                              'Est. Arrival',
+                              style: TextStyle(
+                                color: AppTheme.textMuted(isDark),
+                                fontSize: 11,
+                              ),
+                            ),
                             Text(
                               '~${appState.navEstMinutesRemaining} min',
-                              style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 18, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: AppTheme.textPrimary(isDark),
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -241,8 +317,8 @@ class _NavigationModalState extends State<NavigationModal>
                       isArrived
                           ? Icons.pin_drop_rounded
                           : appState.navCurrentStepIndex == 1
-                              ? Icons.turn_right_rounded
-                              : Icons.stairs_rounded,
+                          ? Icons.turn_right_rounded
+                          : Icons.stairs_rounded,
                       color: AppTheme.cyanPrimary,
                       size: 24,
                     ),
@@ -256,15 +332,23 @@ class _NavigationModalState extends State<NavigationModal>
                           isArrived
                               ? 'Destination Reached'
                               : 'Step ${appState.navCurrentStepIndex} of 3',
-                          style: const TextStyle(color: AppTheme.cyanPrimary, fontSize: 11, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: AppTheme.cyanPrimary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           isArrived
                               ? 'You have arrived in front of ${venue.code} (${venue.name}).'
                               : appState.navCurrentStepIndex == 1
-                                  ? 'Walk straight 25 meters, then turn right toward West Stairwell.'
-                                  : 'Ascend to Level ${venue.level}. Room ${venue.code} is third door on the left.',
-                          style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 13, fontWeight: FontWeight.w500),
+                              ? 'Walk straight 25 meters, then turn right toward West Stairwell.'
+                              : 'Ascend to Level ${venue.level}. Room ${venue.code} is third door on the left.',
+                          style: TextStyle(
+                            color: AppTheme.textPrimary(isDark),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -283,17 +367,31 @@ class _NavigationModalState extends State<NavigationModal>
                       appState.triggerArUcoRecalibration();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('ArUco Camera Vision Scan Completed! Position Rectified.'),
+                          content: Text(
+                            'ArUco Camera Vision Scan Completed! Position Rectified.',
+                          ),
                           backgroundColor: AppTheme.cyanPrimary,
                         ),
                       );
                     },
-                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 18, color: AppTheme.cyanPrimary),
-                    label: const Text('ArUco Recalibrate', style: TextStyle(color: AppTheme.cyanPrimary, fontSize: 13)),
+                    icon: const Icon(
+                      Icons.qr_code_scanner_rounded,
+                      size: 18,
+                      color: AppTheme.cyanPrimary,
+                    ),
+                    label: const Text(
+                      'ArUco Recalibrate',
+                      style: TextStyle(
+                        color: AppTheme.cyanPrimary,
+                        fontSize: 13,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: const BorderSide(color: AppTheme.cyanPrimary),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                   ),
                 ),
@@ -302,13 +400,21 @@ class _NavigationModalState extends State<NavigationModal>
                   child: ElevatedButton(
                     onPressed: () => appState.stopNavigation(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: isArrived ? AppTheme.emeraldSuccess : AppTheme.roseAlert.withValues(alpha: 0.85),
+                      backgroundColor: isArrived
+                          ? AppTheme.emeraldSuccess
+                          : AppTheme.roseAlert.withValues(alpha: 0.85),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     child: Text(
                       isArrived ? 'Finish Navigation' : 'Cancel Route',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -351,7 +457,9 @@ class _IndoorRouteCanvasPainter extends CustomPainter {
 
     // Corridor & Room Rectangles Mock (IMDF Geometry)
     final roomPaint = Paint()
-      ..color = (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85)
+      ..color = (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+        alpha: 0.85,
+      )
       ..style = PaintingStyle.fill;
     final roomBorderPaint = Paint()
       ..color = AppTheme.blueGlow.withValues(alpha: 0.35)
@@ -359,16 +467,35 @@ class _IndoorRouteCanvasPainter extends CustomPainter {
       ..strokeWidth = 1.2;
 
     // Room A
-    canvas.drawRRect(RRect.fromLTRBR(20, 20, 110, 80, const Radius.circular(8)), roomPaint);
-    canvas.drawRRect(RRect.fromLTRBR(20, 20, 110, 80, const Radius.circular(8)), roomBorderPaint);
+    canvas.drawRRect(
+      RRect.fromLTRBR(20, 20, 110, 80, const Radius.circular(8)),
+      roomPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromLTRBR(20, 20, 110, 80, const Radius.circular(8)),
+      roomBorderPaint,
+    );
 
     // Room B
-    canvas.drawRRect(RRect.fromLTRBR(150, 20, 260, 80, const Radius.circular(8)), roomPaint);
-    canvas.drawRRect(RRect.fromLTRBR(150, 20, 260, 80, const Radius.circular(8)), roomBorderPaint);
+    canvas.drawRRect(
+      RRect.fromLTRBR(150, 20, 260, 80, const Radius.circular(8)),
+      roomPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromLTRBR(150, 20, 260, 80, const Radius.circular(8)),
+      roomBorderPaint,
+    );
 
     // Target Room (Destination)
-    final targetRect = RRect.fromLTRBR(200, 110, 310, 165, const Radius.circular(8));
-    final targetFill = Paint()..color = AppTheme.cyanPrimary.withValues(alpha: 0.15);
+    final targetRect = RRect.fromLTRBR(
+      200,
+      110,
+      310,
+      165,
+      const Radius.circular(8),
+    );
+    final targetFill = Paint()
+      ..color = AppTheme.cyanPrimary.withValues(alpha: 0.15);
     final targetBorder = Paint()
       ..color = AppTheme.cyanPrimary
       ..style = PaintingStyle.stroke
@@ -395,7 +522,13 @@ class _IndoorRouteCanvasPainter extends CustomPainter {
     canvas.drawPath(path, pathPaint);
 
     // Current Walked Path glowing cyan
-    final currentOffset = _computePointOnPath(progress, startPt, turnPt1, turnPt2, endPt);
+    final currentOffset = _computePointOnPath(
+      progress,
+      startPt,
+      turnPt1,
+      turnPt2,
+      endPt,
+    );
 
     final walkedPaint = Paint()
       ..color = AppTheme.cyanPrimary
@@ -409,16 +542,25 @@ class _IndoorRouteCanvasPainter extends CustomPainter {
     if (segment >= 1.0) {
       walkedPath.lineTo(turnPt1.dx, turnPt1.dy);
     } else {
-      walkedPath.lineTo(startPt.dx + (turnPt1.dx - startPt.dx) * segment, startPt.dy);
+      walkedPath.lineTo(
+        startPt.dx + (turnPt1.dx - startPt.dx) * segment,
+        startPt.dy,
+      );
     }
 
     if (segment >= 2.0) {
       walkedPath.lineTo(turnPt2.dx, turnPt2.dy);
       double rest = segment - 2.0;
-      walkedPath.lineTo(turnPt2.dx + (endPt.dx - turnPt2.dx) * rest, turnPt2.dy + (endPt.dy - turnPt2.dy) * rest);
+      walkedPath.lineTo(
+        turnPt2.dx + (endPt.dx - turnPt2.dx) * rest,
+        turnPt2.dy + (endPt.dy - turnPt2.dy) * rest,
+      );
     } else if (segment > 1.0) {
       double rest = segment - 1.0;
-      walkedPath.lineTo(turnPt1.dx, turnPt1.dy + (turnPt2.dy - turnPt1.dy) * rest);
+      walkedPath.lineTo(
+        turnPt1.dx,
+        turnPt1.dy + (turnPt2.dy - turnPt1.dy) * rest,
+      );
     }
 
     canvas.drawPath(walkedPath, walkedPaint);
@@ -434,22 +576,38 @@ class _IndoorRouteCanvasPainter extends CustomPainter {
     canvas.drawCircle(
       userPos,
       pulseRadius,
-      Paint()..color = AppTheme.cyanPrimary.withValues(alpha: 0.3 - (pulse * 0.2)),
+      Paint()
+        ..color = AppTheme.cyanPrimary.withValues(alpha: 0.3 - (pulse * 0.2)),
     );
     canvas.drawCircle(userPos, 7, Paint()..color = AppTheme.cyanPrimary);
     canvas.drawCircle(userPos, 3, Paint()..color = Colors.white);
   }
 
-  Offset _computePointOnPath(double t, Offset p0, Offset p1, Offset p2, Offset p3) {
+  Offset _computePointOnPath(
+    double t,
+    Offset p0,
+    Offset p1,
+    Offset p2,
+    Offset p3,
+  ) {
     if (t <= 0.33) {
       double sub = t / 0.33;
-      return Offset(p0.dx + (p1.dx - p0.dx) * sub, p0.dy + (p1.dy - p0.dy) * sub);
+      return Offset(
+        p0.dx + (p1.dx - p0.dx) * sub,
+        p0.dy + (p1.dy - p0.dy) * sub,
+      );
     } else if (t <= 0.66) {
       double sub = (t - 0.33) / 0.33;
-      return Offset(p1.dx + (p2.dx - p1.dx) * sub, p1.dy + (p2.dy - p1.dy) * sub);
+      return Offset(
+        p1.dx + (p2.dx - p1.dx) * sub,
+        p1.dy + (p2.dy - p1.dy) * sub,
+      );
     } else {
       double sub = (t - 0.66) / 0.34;
-      return Offset(p2.dx + (p3.dx - p2.dx) * sub, p2.dy + (p3.dy - p2.dy) * sub);
+      return Offset(
+        p2.dx + (p3.dx - p2.dx) * sub,
+        p2.dy + (p3.dy - p2.dy) * sub,
+      );
     }
   }
 

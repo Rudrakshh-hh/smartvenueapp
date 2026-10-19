@@ -4,6 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>SmartVenue needs camera access to capture and scan timetable images.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>SmartVenue needs photo library access to upload timetable images.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

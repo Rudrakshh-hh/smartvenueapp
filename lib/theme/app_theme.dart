@@ -28,12 +28,18 @@ class AppTheme {
   static const Color roseAlert = Color(0xFFE11D48);
 
   // High-Contrast Deep Vibrant Accent Colors for Light Theme Headings & Highlights
-  static Color cyan(bool isDark) => isDark ? cyanPrimary : const Color(0xFF0369A1); // Deep Ocean Cobalt Cyan
-  static Color purple(bool isDark) => isDark ? purpleAccent : const Color(0xFF6B21A8); // Deep Royal Violet
-  static Color blue(bool isDark) => isDark ? blueGlow : const Color(0xFF1E40AF); // Deep Sapphire Blue
-  static Color emerald(bool isDark) => isDark ? emeraldSuccess : const Color(0xFF065F46); // Deep Forest Emerald
-  static Color amber(bool isDark) => isDark ? amberWarning : const Color(0xFF92400E); // Deep Warm Amber
-  static Color rose(bool isDark) => isDark ? roseAlert : const Color(0xFF9F1239); // Deep Crimson
+  static Color cyan(bool isDark) =>
+      isDark ? cyanPrimary : const Color(0xFF0369A1); // Deep Ocean Cobalt Cyan
+  static Color purple(bool isDark) =>
+      isDark ? purpleAccent : const Color(0xFF6B21A8); // Deep Royal Violet
+  static Color blue(bool isDark) =>
+      isDark ? blueGlow : const Color(0xFF1E40AF); // Deep Sapphire Blue
+  static Color emerald(bool isDark) =>
+      isDark ? emeraldSuccess : const Color(0xFF065F46); // Deep Forest Emerald
+  static Color amber(bool isDark) =>
+      isDark ? amberWarning : const Color(0xFF92400E); // Deep Warm Amber
+  static Color rose(bool isDark) =>
+      isDark ? roseAlert : const Color(0xFF9F1239); // Deep Crimson
 
   // Backwards Compatible Direct Accessors
   static const Color bgDark = darkBg;
@@ -48,9 +54,12 @@ class AppTheme {
   static Color getBgSurface(bool isDark) => isDark ? darkSurface : lightSurface;
   static Color getBgCard(bool isDark) => isDark ? darkCard : lightCard;
 
-  static Color textPrimary(bool isDark) => isDark ? darkTextPrimary : lightTextPrimary;
-  static Color textSecondary(bool isDark) => isDark ? darkTextSecondary : lightTextSecondary;
-  static Color textMuted(bool isDark) => isDark ? darkTextMuted : lightTextMuted;
+  static Color textPrimary(bool isDark) =>
+      isDark ? darkTextPrimary : lightTextPrimary;
+  static Color textSecondary(bool isDark) =>
+      isDark ? darkTextSecondary : lightTextSecondary;
+  static Color textMuted(bool isDark) =>
+      isDark ? darkTextMuted : lightTextMuted;
 
   // Dark Theme Definition
   static ThemeData get darkTheme {
@@ -85,14 +94,20 @@ class AppTheme {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: cyanPrimary.withValues(alpha: 0.15), width: 1),
+          side: BorderSide(
+            color: cyanPrimary.withValues(alpha: 0.15),
+            width: 1,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurface.withValues(alpha: 0.8),
         hintStyle: const TextStyle(color: darkTextMuted, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: cyanPrimary.withValues(alpha: 0.2)),
@@ -143,21 +158,31 @@ class AppTheme {
         shadowColor: const Color(0xFF0369A1).withValues(alpha: 0.12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: const Color(0xFF0369A1).withValues(alpha: 0.35), width: 1.2),
+          side: BorderSide(
+            color: const Color(0xFF0369A1).withValues(alpha: 0.35),
+            width: 1.2,
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: lightSurface,
         hintStyle: const TextStyle(color: lightTextMuted, fontSize: 14),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: const Color(0xFF0369A1).withValues(alpha: 0.35)),
+          borderSide: BorderSide(
+            color: const Color(0xFF0369A1).withValues(alpha: 0.35),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: const Color(0xFF0369A1).withValues(alpha: 0.35)),
+          borderSide: BorderSide(
+            color: const Color(0xFF0369A1).withValues(alpha: 0.35),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -174,17 +199,25 @@ class AppTheme {
     Color? borderColor,
     List<Color>? gradientColors,
   }) {
-    final defaultBorder = isDark ? cyanPrimary.withValues(alpha: 0.2) : const Color(0xFF0369A1).withValues(alpha: 0.35);
+    final defaultBorder = isDark
+        ? cyanPrimary.withValues(alpha: 0.2)
+        : const Color(0xFF0369A1).withValues(alpha: 0.35);
 
     return BoxDecoration(
       borderRadius: BorderRadius.circular(borderRadius),
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: gradientColors ?? [
-          (isDark ? darkSurface : lightSurface).withValues(alpha: isDark ? 0.85 : 0.95),
-          (isDark ? darkCard : lightCard).withValues(alpha: isDark ? 0.6 : 0.9),
-        ],
+        colors:
+            gradientColors ??
+            [
+              (isDark ? darkSurface : lightSurface).withValues(
+                alpha: isDark ? 0.85 : 0.95,
+              ),
+              (isDark ? darkCard : lightCard).withValues(
+                alpha: isDark ? 0.6 : 0.9,
+              ),
+            ],
       ),
       border: Border.all(
         color: borderColor ?? defaultBorder,
@@ -192,7 +225,9 @@ class AppTheme {
       ),
       boxShadow: [
         BoxShadow(
-          color: (borderColor ?? (isDark ? cyanPrimary : const Color(0xFF0369A1))).withValues(alpha: isDark ? 0.08 : 0.12),
+          color:
+              (borderColor ?? (isDark ? cyanPrimary : const Color(0xFF0369A1)))
+                  .withValues(alpha: isDark ? 0.08 : 0.12),
           blurRadius: 16,
           spreadRadius: 1,
           offset: const Offset(0, 4),

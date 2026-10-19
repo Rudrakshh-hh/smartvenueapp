@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
@@ -64,7 +65,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             gradientColors: [
               AppTheme.cyan(isDark).withValues(alpha: isDark ? 0.15 : 0.12),
               AppTheme.purple(isDark).withValues(alpha: isDark ? 0.12 : 0.1),
-              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(alpha: 0.85),
+              (isDark ? AppTheme.darkCard : AppTheme.lightSurface).withValues(
+                alpha: 0.85,
+              ),
             ],
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -75,7 +78,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.school_rounded, color: AppTheme.cyan(isDark), size: 20),
+                        Icon(
+                          Icons.school_rounded,
+                          color: AppTheme.cyan(isDark),
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           appState.userDepartment.toUpperCase(),
@@ -88,7 +95,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ],
                     ),
-                    Icon(Icons.nfc_rounded, color: AppTheme.purple(isDark), size: 24),
+                    Icon(
+                      Icons.nfc_rounded,
+                      color: AppTheme.purple(isDark),
+                      size: 24,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -97,8 +108,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 30,
-                      backgroundColor: AppTheme.cyan(isDark).withValues(alpha: 0.2),
-                      child: Icon(Icons.person_rounded, color: AppTheme.cyan(isDark), size: 36),
+                      backgroundColor: AppTheme.cyan(isDark)
+                          .withValues(alpha: 0.2),
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: AppTheme.cyan(isDark),
+                        size: 36,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Column(
@@ -122,14 +138,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Text(
                           'Status: Active Scholar',
-                          style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11),
+                          style: TextStyle(
+                            color: AppTheme.textMuted(isDark),
+                            fontSize: 11,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Divider(color: (isDark ? Colors.white12 : Colors.black12), height: 1),
+                Divider(
+                  color: (isDark ? Colors.white12 : Colors.black12),
+                  height: 1,
+                ),
                 const SizedBox(height: 12),
 
                 // Simulated QR Barcode
@@ -139,8 +161,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('ACCESS CLEARANCE', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 9.5)),
-                        Text('LEVEL 1 - 3 ALL BLOCKS', style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 11, fontWeight: FontWeight.bold)),
+                        Text(
+                          'ACCESS CLEARANCE',
+                          style: TextStyle(
+                            color: AppTheme.textMuted(isDark),
+                            fontSize: 9.5,
+                          ),
+                        ),
+                        Text(
+                          'LEVEL 1 - 3 ALL BLOCKS',
+                          style: TextStyle(
+                            color: AppTheme.textPrimary(isDark),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     Container(
@@ -149,7 +184,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         color: isDark ? Colors.white : AppTheme.darkBg,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.qr_code_2_rounded, color: isDark ? Colors.black : Colors.white, size: 28),
+                      child: Icon(
+                        Icons.qr_code_2_rounded,
+                        color: isDark ? Colors.black : Colors.white,
+                        size: 28,
+                      ),
                     ),
                   ],
                 ),
@@ -183,16 +222,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   statusText: 'CONNECTED',
                   isDark: isDark,
                 ),
-                Divider(color: (isDark ? Colors.white10 : Colors.black12), height: 20),
+                Divider(
+                  color: (isDark ? Colors.white10 : Colors.black12),
+                  height: 20,
+                ),
                 _buildSensorRow(
                   icon: Icons.directions_walk_rounded,
                   color: AppTheme.purple(isDark),
                   title: 'Kinematic PDR (Accel + Gyro)',
-                  subtitle: '${appState.pdrStepCounter} steps detected (Kalman Filtered)',
+                  subtitle:
+                      '${appState.pdrStepCounter} steps detected (Kalman Filtered)',
                   statusText: 'CALIBRATED',
                   isDark: isDark,
                 ),
-                Divider(color: (isDark ? Colors.white10 : Colors.black12), height: 20),
+                Divider(
+                  color: (isDark ? Colors.white10 : Colors.black12),
+                  height: 20,
+                ),
                 _buildSensorRow(
                   icon: Icons.camera_front_rounded,
                   color: AppTheme.blue(isDark),
@@ -211,16 +257,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       appState.triggerArUcoRecalibration();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('ArUco Camera Vision Scan Triggered! Position Rectified.'),
+                          content: Text(
+                            'ArUco Camera Vision Scan Triggered! Position Rectified.',
+                          ),
                           backgroundColor: AppTheme.cyanPrimary,
                         ),
                       );
                     },
-                    icon: Icon(Icons.qr_code_scanner_rounded, color: AppTheme.cyan(isDark), size: 18),
-                    label: Text('RECALIBRATE POSITION WITH ARUCO SCAN', style: TextStyle(color: AppTheme.cyan(isDark), fontSize: 11.5, fontWeight: FontWeight.bold)),
+                    icon: Icon(
+                      Icons.qr_code_scanner_rounded,
+                      color: AppTheme.cyan(isDark),
+                      size: 18,
+                    ),
+                    label: Text(
+                      'RECALIBRATE POSITION WITH ARUCO SCAN',
+                      style: TextStyle(
+                        color: AppTheme.cyan(isDark),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       side: BorderSide(color: AppTheme.cyan(isDark)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -251,33 +312,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   value: !isDark,
                   activeThumbColor: AppTheme.cyan(isDark),
                   onChanged: (val) => appState.toggleTheme(),
-                  title: Text('White theme', style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 14, fontWeight: FontWeight.w600)),
-                  subtitle: Text(isDark ? 'Currently on Dark Cyber Theme' : 'Currently on White Theme', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11)),
-                  secondary: Icon(isDark ? Icons.nightlight_round : Icons.wb_sunny_rounded, color: isDark ? AppTheme.purple(isDark) : AppTheme.amber(isDark)),
+                  title: Text(
+                    'White theme',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    isDark
+                        ? 'Currently on Dark Cyber Theme'
+                        : 'Currently on White Theme',
+                    style: TextStyle(
+                      color: AppTheme.textMuted(isDark),
+                      fontSize: 11,
+                    ),
+                  ),
+                  secondary: Icon(
+                    isDark ? Icons.nightlight_round : Icons.wb_sunny_rounded,
+                    color: isDark
+                        ? AppTheme.purple(isDark)
+                        : AppTheme.amber(isDark),
+                  ),
                 ),
-                Divider(color: (isDark ? Colors.white10 : Colors.black12), height: 1),
+                Divider(
+                  color: (isDark ? Colors.white10 : Colors.black12),
+                  height: 1,
+                ),
                 SwitchListTile(
                   value: _aiPredictiveRouting,
                   activeThumbColor: AppTheme.cyan(isDark),
-                  onChanged: (val) => setState(() => _aiPredictiveRouting = val),
-                  title: Text('AI Predictive Routing', style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 14, fontWeight: FontWeight.w600)),
-                  subtitle: Text('Auto-calculates shortest path using D* Lite', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11)),
+                  onChanged: (val) =>
+                      setState(() => _aiPredictiveRouting = val),
+                  title: Text(
+                    'AI Predictive Routing',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Auto-calculates shortest path using D* Lite',
+                    style: TextStyle(
+                      color: AppTheme.textMuted(isDark),
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
-                Divider(color: (isDark ? Colors.white10 : Colors.black12), height: 1),
+                Divider(
+                  color: (isDark ? Colors.white10 : Colors.black12),
+                  height: 1,
+                ),
                 SwitchListTile(
                   value: _congestionAlerts,
                   activeThumbColor: AppTheme.cyan(isDark),
                   onChanged: (val) => setState(() => _congestionAlerts = val),
-                  title: Text('Hallway Congestion Alerts', style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 14, fontWeight: FontWeight.w600)),
-                  subtitle: Text('Reroute around busy corridors', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11)),
+                  title: Text(
+                    'Hallway Congestion Alerts',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Reroute around busy corridors',
+                    style: TextStyle(
+                      color: AppTheme.textMuted(isDark),
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
-                Divider(color: (isDark ? Colors.white10 : Colors.black12), height: 1),
+                Divider(
+                  color: (isDark ? Colors.white10 : Colors.black12),
+                  height: 1,
+                ),
                 SwitchListTile(
                   value: _biometricEnabled,
                   activeThumbColor: AppTheme.cyan(isDark),
                   onChanged: (val) => setState(() => _biometricEnabled = val),
-                  title: Text('Biometric Fast Auth', style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 14, fontWeight: FontWeight.w600)),
-                  subtitle: Text('Use FaceID/Fingerprint for sign in', style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11)),
+                  title: Text(
+                    'Biometric Fast Auth',
+                    style: TextStyle(
+                      color: AppTheme.textPrimary(isDark),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Use FaceID/Fingerprint for sign in',
+                    style: TextStyle(
+                      color: AppTheme.textMuted(isDark),
+                      fontSize: 11,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -290,11 +420,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 48,
             child: OutlinedButton.icon(
               onPressed: () => appState.logout(),
-              icon: const Icon(Icons.logout_rounded, color: AppTheme.roseAlert, size: 18),
-              label: const Text('LOG OUT', style: TextStyle(color: AppTheme.roseAlert, fontWeight: FontWeight.bold, fontSize: 13)),
+              icon: const Icon(
+                Icons.logout_rounded,
+                color: AppTheme.roseAlert,
+                size: 18,
+              ),
+              label: const Text(
+                'LOG OUT',
+                style: TextStyle(
+                  color: AppTheme.roseAlert,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppTheme.roseAlert),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -329,11 +472,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 title,
-                style: TextStyle(color: AppTheme.textPrimary(isDark), fontSize: 13, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: AppTheme.textPrimary(isDark),
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 subtitle,
-                style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 10.5),
+                style: TextStyle(
+                  color: AppTheme.textMuted(isDark),
+                  fontSize: 10.5,
+                ),
               ),
             ],
           ),
@@ -347,7 +497,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Text(
             statusText,
-            style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: color,
+              fontSize: 9,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

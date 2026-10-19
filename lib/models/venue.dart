@@ -4,13 +4,16 @@ class Venue {
   final String name; // e.g. "Main Lecture Hall"
   final String building; // e.g. "Innovation Hub"
   final int level; // e.g. 2
-  final String category; // "Lecture Hall", "Computer Lab", "Study Pod", "Seminar Hall"
+  final String
+  category; // "Lecture Hall", "Computer Lab", "Study Pod", "Seminar Hall"
   final bool isOccupied;
-  final String currentActivity; // e.g. "CS302 Lecture" or "Vacant - Open for Study"
+  final String
+  currentActivity; // e.g. "CS302 Lecture" or "Vacant - Open for Study"
   final int capacity;
   final int occupiedSeats;
   final double distanceMeters;
-  final List<String> tags; // e.g. ["AC", "Projector", "Power Sockets", "ArUco Anchor #12"]
+  final List<String>
+  tags; // e.g. ["AC", "Projector", "Power Sockets", "ArUco Anchor #12"]
   final String imdfRoomId;
 
   const Venue({
@@ -31,81 +34,135 @@ class Venue {
 
   int get availableSeats => capacity - occupiedSeats;
 
+  // Static Test Venues for Unit & Integration Testing
+  static const testVenueBinary = Venue(
+    id: "test_v_001",
+    code: "SP-101",
+    name: "Study Pod Alpha",
+    building: "Central Library",
+    level: 1,
+    category: "Study Pod",
+    isOccupied: false,
+    currentActivity: "Vacant",
+    capacity: 1, // Binary Semaphore (Single seat)
+    occupiedSeats: 0,
+    distanceMeters: 10.0,
+    tags: ["AC", "Power Sockets", "Soundproof", "Whiteboard"],
+    imdfRoomId: "room_sp_101",
+  );
+
+  static const testVenueCountingVacant = Venue(
+    id: "test_v_002",
+    code: "LH-201",
+    name: "Main Lecture Hall",
+    building: "Innovation Hub",
+    level: 2,
+    category: "Lecture Hall",
+    isOccupied: false,
+    currentActivity: "Vacant - Open for Study",
+    capacity: 100, // Counting Semaphore
+    occupiedSeats: 0,
+    distanceMeters: 45.0,
+    tags: ["AC", "Projector", "Smart Board", "Mic"],
+    imdfRoomId: "room_lh_201",
+  );
+
+  static const testVenuePartiallyFull = Venue(
+    id: "test_v_003",
+    code: "CL-305",
+    name: "AI Computing Lab",
+    building: "Tech Annex",
+    level: 3,
+    category: "Computer Lab",
+    isOccupied: true,
+    currentActivity: "CS401 Lab Session",
+    capacity: 40,
+    occupiedSeats: 30, // 10 available seats
+    distanceMeters: 85.5,
+    tags: ["AC", "High-End GPUs", "Linux", "Dual Monitors"],
+    imdfRoomId: "room_cl_305",
+  );
+
+  static const testVenueFull = Venue(
+    id: "test_v_004",
+    code: "SH-400",
+    name: "Executive Seminar Hall",
+    building: "Business Block",
+    level: 4,
+    category: "Seminar Hall",
+    isOccupied: true,
+    currentActivity: "Faculty Workshop",
+    capacity: 50,
+    occupiedSeats: 50, // Exhausted capacity
+    distanceMeters: 150.0,
+    tags: ["AC", "Video Conferencing", "Catering Setup"],
+    imdfRoomId: "room_sh_400",
+  );
+
   static List<Venue> sampleVenues = const [
+    testVenueBinary,
+    testVenueCountingVacant,
+    testVenuePartiallyFull,
+    testVenueFull,
     Venue(
-      id: 'v1',
-      code: 'LH-201',
-      name: 'Alan Turing Auditorium',
-      building: 'Tech Block A',
+      id: "v_001",
+      code: "LH-201",
+      name: "Main Lecture Hall",
+      building: "Innovation Hub",
       level: 2,
-      category: 'Lecture Hall',
+      category: "Lecture Hall",
       isOccupied: false,
-      currentActivity: 'Vacant - Free until 02:00 PM',
-      capacity: 120,
+      currentActivity: "Vacant - Open for Study",
+      capacity: 150,
       occupiedSeats: 0,
-      distanceMeters: 45.0,
-      tags: ['Projector', 'Power Sockets', 'AC', 'BLE Anchor #201'],
-      imdfRoomId: 'imdf_room_lh201',
+      distanceMeters: 45.5,
+      tags: ["AC", "Projector", "Smart Board", "Mic"],
+      imdfRoomId: "room_lh_201",
     ),
     Venue(
-      id: 'v2',
-      code: 'LAB-304',
-      name: 'AI & Robotics Lab',
-      building: 'Tech Block A',
-      level: 3,
-      category: 'Computer Lab',
-      isOccupied: true,
-      currentActivity: 'CS401 Computer Vision Class',
+      id: "v_002",
+      code: "CL-105",
+      name: "Advanced Computer Lab",
+      building: "Tech Annex",
+      level: 1,
+      category: "Computer Lab",
+      isOccupied: false,
+      currentActivity: "Vacant",
       capacity: 40,
-      occupiedSeats: 38,
-      distanceMeters: 120.0,
-      tags: ['GPU Workstations', 'ArUco Marker #04', 'High Speed Wi-Fi'],
-      imdfRoomId: 'imdf_room_lab304',
-    ),
-    Venue(
-      id: 'v3',
-      code: 'SP-102',
-      name: 'Quiet Focus Pod B',
-      building: 'Library Complex',
-      level: 1,
-      category: 'Study Pod',
-      isOccupied: false,
-      currentActivity: 'Vacant - Open for individual study',
-      capacity: 6,
-      occupiedSeats: 1,
-      distanceMeters: 85.0,
-      tags: ['Quiet Zone', 'Smart Screen', 'Wireless Charging'],
-      imdfRoomId: 'imdf_room_sp102',
-    ),
-    Venue(
-      id: 'v4',
-      code: 'SH-105',
-      name: 'Ada Lovelace Seminar Hall',
-      building: 'Innovation Center',
-      level: 1,
-      category: 'Seminar Hall',
-      isOccupied: false,
-      currentActivity: 'Vacant - Open for booking',
-      capacity: 80,
       occupiedSeats: 0,
-      distanceMeters: 160.0,
-      tags: ['Audio System', 'Live Stream Rig', 'BLE Anchor #105'],
-      imdfRoomId: 'imdf_room_sh105',
+      distanceMeters: 120.0,
+      tags: ["AC", "High-End PCs", "Linux", "Dual Monitors"],
+      imdfRoomId: "room_cl_105",
     ),
     Venue(
-      id: 'v5',
-      code: 'LAB-202',
-      name: 'Cybersecurity Lab',
-      building: 'Tech Block B',
-      level: 2,
-      category: 'Computer Lab',
+      id: "v_003",
+      code: "SP-301",
+      name: "Quiet Study Pod A",
+      building: "Central Library",
+      level: 3,
+      category: "Study Pod",
       isOccupied: false,
-      currentActivity: 'Vacant - Open Lab Hours',
-      capacity: 35,
-      occupiedSeats: 4,
-      distanceMeters: 210.0,
-      tags: ['Dual Monitors', 'Ethernet Jacks', 'AC'],
-      imdfRoomId: 'imdf_room_lab202',
+      currentActivity: "Vacant",
+      capacity: 1, // Classic Binary Semaphore case
+      occupiedSeats: 0,
+      distanceMeters: 15.0,
+      tags: ["AC", "Power Sockets", "Soundproof", "Whiteboard"],
+      imdfRoomId: "room_sp_301",
+    ),
+    Venue(
+      id: "v_004",
+      code: "SH-400",
+      name: "Executive Seminar Hall",
+      building: "Business Block",
+      level: 4,
+      category: "Seminar Hall",
+      isOccupied: true,
+      currentActivity: "Faculty Meeting",
+      capacity: 30,
+      occupiedSeats: 30, // Currently full
+      distanceMeters: 300.0,
+      tags: ["AC", "Video Conferencing", "Catering Setup"],
+      imdfRoomId: "room_sh_400",
     ),
   ];
 }

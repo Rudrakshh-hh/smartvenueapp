@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../theme/app_theme.dart';
 
 class CyberBackground extends StatefulWidget {
@@ -61,10 +62,14 @@ class _CyberBackgroundState extends State<CyberBackground>
             height: 260,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.cyanPrimary.withValues(alpha: isDark ? 0.08 : 0.12),
+              color: AppTheme.cyanPrimary.withValues(
+                alpha: isDark ? 0.08 : 0.12,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.cyanPrimary.withValues(alpha: isDark ? 0.12 : 0.18),
+                  color: AppTheme.cyanPrimary.withValues(
+                    alpha: isDark ? 0.12 : 0.18,
+                  ),
                   blurRadius: 100,
                   spreadRadius: 40,
                 ),
@@ -80,10 +85,14 @@ class _CyberBackgroundState extends State<CyberBackground>
             height: 280,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppTheme.purpleAccent.withValues(alpha: isDark ? 0.08 : 0.12),
+              color: AppTheme.purpleAccent.withValues(
+                alpha: isDark ? 0.08 : 0.12,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.purpleAccent.withValues(alpha: isDark ? 0.12 : 0.18),
+                  color: AppTheme.purpleAccent.withValues(
+                    alpha: isDark ? 0.12 : 0.18,
+                  ),
                   blurRadius: 120,
                   spreadRadius: 50,
                 ),
