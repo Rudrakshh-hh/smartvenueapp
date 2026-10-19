@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/app_state.dart';
+import '../../services/ai_timetable_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
 import '../../widgets/navigation_modal.dart';
@@ -24,9 +25,9 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
     try {
       final XFile? photo = await _picker.pickImage(
         source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
+        maxWidth: 3840,
+        maxHeight: 3840,
+        imageQuality: 100,
       );
       if (photo != null) {
         final bytes = await photo.readAsBytes();
@@ -39,7 +40,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Camera Photo Captured (${photo.name})! Analyzing via OpenRouter Vision AI...',
+                'Camera Photo Captured (${photo.name})! Analyzing via ${AiTimetableService.apiName}...',
               ),
               backgroundColor: AppTheme.purpleAccent,
             ),
@@ -64,9 +65,9 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
+        maxWidth: 3840,
+        maxHeight: 3840,
+        imageQuality: 100,
       );
       if (image != null) {
         final bytes = await image.readAsBytes();
@@ -79,7 +80,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Image Loaded (${image.name})! Analyzing via OpenRouter Vision AI...',
+                'Image Loaded (${image.name})! Analyzing via ${AiTimetableService.apiName}...',
               ),
               backgroundColor: AppTheme.cyanPrimary,
             ),
@@ -258,34 +259,40 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                   color: AppTheme.purple(isDark).withValues(alpha: 0.3),
                 ),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '• Provider: OpenRouter AI',
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    '• Provider: ${AiTimetableService.apiName}',
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    '• API Key: sk-or-v1-***65b02 (Active)',
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    AiTimetableService.apiKey.isNotEmpty
+                        ? '• API Key: ${AiTimetableService.apiKey.substring(0, AiTimetableService.apiKey.length > 12 ? 12 : AiTimetableService.apiKey.length)}... (Configured)'
+                        : '• API Key: Local / Not required',
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      color: AppTheme.emeraldSuccess,
+                    ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    '• Endpoint: https://openrouter.ai/api/v1',
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    '• Endpoint: ${AiTimetableService.apiEndpoint}',
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
-                    '• Model: Nemotron-3.5-Super-VL (Free)',
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 11),
+                    '• Model: ${AiTimetableService.modelName}',
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 11),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'OpenRouter API is configured and active in lib/services/ai_timetable_service.dart. You can switch models or update API keys directly in that file.',
+              'Ollama Endpoint defaults to http://localhost:11434/v1/chat/completions (use http://10.0.2.2:11434/v1/chat/completions for Android emulator).\nSet via: --dart-define=OLLAMA_ENDPOINT=...',
               style: TextStyle(color: AppTheme.textMuted(isDark), fontSize: 11),
             ),
           ],
@@ -375,9 +382,9 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                                 width: 0.8,
                               ),
                             ),
-                            child: const Text(
-                              'OPENROUTER AI',
-                              style: TextStyle(
+                            child: Text(
+                              AiTimetableService.apiName.toUpperCase(),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 8.5,
                                 fontWeight: FontWeight.bold,
@@ -640,7 +647,7 @@ class _TimetableAnalyserScreenState extends State<TimetableAnalyserScreen> {
                               ),
                             ),
                             Text(
-                              'Target Model: Nemotron-3.5-Super-VL (OpenRouter)',
+                              'Target Model: ${AiTimetableService.modelName} (${AiTimetableService.apiName})',
                               style: TextStyle(
                                 color: AppTheme.textMuted(isDark),
                                 fontSize: 10,

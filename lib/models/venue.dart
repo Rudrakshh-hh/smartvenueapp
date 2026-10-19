@@ -34,7 +34,76 @@ class Venue {
 
   int get availableSeats => capacity - occupiedSeats;
 
+  // Static Test Venues for Unit & Integration Testing
+  static const testVenueBinary = Venue(
+    id: "test_v_001",
+    code: "SP-101",
+    name: "Study Pod Alpha",
+    building: "Central Library",
+    level: 1,
+    category: "Study Pod",
+    isOccupied: false,
+    currentActivity: "Vacant",
+    capacity: 1, // Binary Semaphore (Single seat)
+    occupiedSeats: 0,
+    distanceMeters: 10.0,
+    tags: ["AC", "Power Sockets", "Soundproof", "Whiteboard"],
+    imdfRoomId: "room_sp_101",
+  );
+
+  static const testVenueCountingVacant = Venue(
+    id: "test_v_002",
+    code: "LH-201",
+    name: "Main Lecture Hall",
+    building: "Innovation Hub",
+    level: 2,
+    category: "Lecture Hall",
+    isOccupied: false,
+    currentActivity: "Vacant - Open for Study",
+    capacity: 100, // Counting Semaphore
+    occupiedSeats: 0,
+    distanceMeters: 45.0,
+    tags: ["AC", "Projector", "Smart Board", "Mic"],
+    imdfRoomId: "room_lh_201",
+  );
+
+  static const testVenuePartiallyFull = Venue(
+    id: "test_v_003",
+    code: "CL-305",
+    name: "AI Computing Lab",
+    building: "Tech Annex",
+    level: 3,
+    category: "Computer Lab",
+    isOccupied: true,
+    currentActivity: "CS401 Lab Session",
+    capacity: 40,
+    occupiedSeats: 30, // 10 available seats
+    distanceMeters: 85.5,
+    tags: ["AC", "High-End GPUs", "Linux", "Dual Monitors"],
+    imdfRoomId: "room_cl_305",
+  );
+
+  static const testVenueFull = Venue(
+    id: "test_v_004",
+    code: "SH-400",
+    name: "Executive Seminar Hall",
+    building: "Business Block",
+    level: 4,
+    category: "Seminar Hall",
+    isOccupied: true,
+    currentActivity: "Faculty Workshop",
+    capacity: 50,
+    occupiedSeats: 50, // Exhausted capacity
+    distanceMeters: 150.0,
+    tags: ["AC", "Video Conferencing", "Catering Setup"],
+    imdfRoomId: "room_sh_400",
+  );
+
   static List<Venue> sampleVenues = const [
+    testVenueBinary,
+    testVenueCountingVacant,
+    testVenuePartiallyFull,
+    testVenueFull,
     Venue(
       id: "v_001",
       code: "LH-201",

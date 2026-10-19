@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 
 import '../models/timetable_item.dart';
 
@@ -19,41 +20,107 @@ class AiAnalysisResult {
     required this.summary,
     this.recommendedClass,
     required this.rawResponse,
-    this.apiName = "OpenRouter Vision API",
+    this.apiName = "DeepSeek AI",
   });
 }
 
-/// Service that interfaces with Open-Source AI Vision APIs (e.g., Llama-Vision, Qwen-VL, Ollama, OpenRouter)
+/// Service that interfaces with Ollama / Open-Source AI Vision APIs
 /// to extract timing, day, subject, and venue from timetable images and schedule classes automatically.
 class AiTimetableService {
-  // Configurable OpenRouter API Parameters
-  static const String apiKey = "xyz";
-  static const String apiEndpoint =
-      "https://openrouter.ai/api/v1/chat/completions";
-  static const String modelName =
-      "openai/gpt-4o";
+  // Configurable Ollama API Parameters
+  static String customApiKey = "xyz";
+  static String customApiEndpoint = "";
+  static String customModelName = "gemma4:31b-cloud";
 
-  /// System prompt supplied to the open-source AI vision model for timetable extraction
+  static String get apiKey {
+    if (customApiKey.isNotEmpty) return customApiKey;
+    return const String.fromEnvironment('OLLAMA_API_KEY', defaultValue: '');
+  }
+
+  static String get apiEndpoint {
+    if (customApiEndpoint.isNotEmpty) return customApiEndpoint;
+    return const String.fromEnvironment(
+      'OLLAMA_ENDPOINT',
+      defaultValue: 'http://localhost:11434/v1/chat/completions',
+    );
+  }
+
+  static String get modelName {
+    if (customModelName.isNotEmpty) return customModelName;
+    return const String.fromEnvironment(
+      'OLLAMA_MODEL',
+      defaultValue: 'gemma4:31b-cloud',
+    );
+  }
+
+  static const String apiName = "Ollama AI";
+
+  /// High-precision system prompt for timetable OCR extraction
   static const String _visionPrompt = '''
-You are an expert OCR Timetable Extraction AI. Analyze the uploaded timetable image and extract all schedule entries.
-The timetable typically contains a main schedule grid (days vs. time slots) and a lookup table mapping subject codes to subject names and faculty names.
-Please correlate the main schedule grid with the lookup table to provide complete information for each class session.
+You are an expert, zero-error OCR and Document Parsing AI specializing in academic schedule extraction.
+Your task is to transcribe the timetable image with 100% character-level accuracy for all text, numbers, codes, and instructor names.
 
-For each entry, extract:
-1. dayOfWeek (e.g., "Monday")
-2. courseCode (e.g., "TCS 502")
-3. courseTitle (Subject Name from the lookup table, e.g., "Operating Systems")
-4. startTime (e.g., "12:00 PM")
-5. endTime (e.g., "12:55 PM")
-6. venueCode (e.g., "224 (LT)")
-7. building (e.g., "Tech Block A" or leave empty if not specified)
-8. level (e.g., 2 or leave as 1 if not specified)
-9. instructor (Faculty Name from the lookup table, e.g., "Ms. Himadri Vaidya")
+CRITICAL PARSING GUIDELINES:
+1. READ LOOKUP LEGEND: First scan the subject lookup table/legend (usually at the bottom or side of the timetable) to map each Subject Code (e.g. "TCS 502") to its exact full Subject Name (e.g. "Operating Systems") and Instructor Name (e.g. "Ms. Himadri Vaidya").
+2. SPELLING & NAMES: Transcribe instructor names and subject titles verbatim from the legend. Do NOT guess, alter, abridge, or misspell any names or titles. Include honorifics (Dr., Prof., Mr., Ms.) exactly as written.
+3. GRID CORRELATION: Examine every day row (Monday-Saturday) and time slot column. For each scheduled class session, create an entry.
+4. CODES & ROOMS: Transcribe venue codes (e.g. "224 (LT)", "LH-102") and course codes (e.g. "TCS-502") character-by-character as shown in the image.
+5. EXACT TIME SLOT MAPPING:
+   - Carefully read the column headers at the top of the schedule grid defining period time slots 
+   - Extract the EXACT startTime and endTime corresponding to the specific column header above each class cell.
+   - CRITICAL: See the class starting time - ending time and how long the class is been conduct.
 
-Return ONLY a structured JSON array containing these objects without extra markdown.
+OUTPUT FORMAT REQUIREMENTS:
+Return ONLY a valid, raw JSON array of objects. Do NOT include markdown codeblocks, explanations, or text before or after the JSON.
+
+Each object must contain these exact keys:
+- "courseCode": String (e.g. "TCS 502")
+- "courseTitle": String (Full subject title from lookup legend)
+- "venueCode": String (e.g. "224 (LT)")
+- "building": String (Building name or "Main Block")
+- "level": Integer (Floor/Level number, default 1)
+- "dayOfWeek": String ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+- "startTime": String (e.g. "09:00 AM")
+- "endTime": String (e.g. "09:55 AM")
+- "instructor": String (Exact full instructor name from lookup legend)
+- "aiRecommendation": String (Short arrival note, e.g. "Class in Venue 224")
 ''';
 
-  /// Sends the image to the Open-Source AI Vision API (OpenRouter) and extracts schedule items.
+  /// Performs local high-precision Google ML Kit OCR on the timetable image.
+  static Future<String> _performLocalMlKitOcr(String? path, Uint8List? bytes) async {
+    try {
+      String? localFilePath = path;
+      File? tempFile;
+
+      if ((localFilePath == null || localFilePath.isEmpty) && bytes != null && bytes.isNotEmpty) {
+        tempFile = File('${Directory.systemTemp.path}/temp_timetable_ocr.jpg');
+        await tempFile.writeAsBytes(bytes);
+        localFilePath = tempFile.path;
+      }
+
+      if (localFilePath == null || localFilePath.isEmpty) return "";
+
+      final inputImage = InputImage.fromFilePath(localFilePath);
+      final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+      await textRecognizer.close();
+
+      if (tempFile != null && await tempFile.exists()) {
+        try {
+          await tempFile.delete();
+        } catch (_) {}
+      }
+
+      final String extracted = recognizedText.text.trim();
+      debugPrint("Google ML Kit Extracted Text:\n$extracted");
+      return extracted;
+    } catch (e) {
+      debugPrint("Local ML Kit OCR Note: $e");
+      return "";
+    }
+  }
+
+  /// Sends the image to the AI Vision API and extracts schedule items.
   static Future<AiAnalysisResult> analyzeTimetableImage({
     required String imageName,
     Uint8List? imageBytes,
@@ -61,17 +128,27 @@ Return ONLY a structured JSON array containing these objects without extra markd
   }) async {
     // Check if real API endpoint is supplied (or if placeholder "API HERE" is used)
     final bool isPlaceholderApi =
-    (apiEndpoint == "API HERE" || apiKey == "API HERE" || apiKey.isEmpty);
+        (apiEndpoint == "API HERE" || apiEndpoint.isEmpty);
 
     if (!isPlaceholderApi) {
       try {
+        // Step 1: Perform native Google ML Kit OCR at 100% full image resolution
+        final String ocrText = await _performLocalMlKitOcr(imagePath, imageBytes);
+
+        // Step 2: Combine base vision prompt with ML Kit's verbatim OCR text
+        final String combinedPrompt = ocrText.isNotEmpty
+            ? '$_visionPrompt\n\nEXACT HIGH-PRECISION OCR TEXT EXTRACTED FROM IMAGE BY GOOGLE ML KIT (Use this for 100% verbatim spelling of instructor names, course codes, and titles):\n"""\n$ocrText\n"""'
+            : _visionPrompt;
+
         final client = HttpClient();
-        client.connectionTimeout = const Duration(seconds: 60);
+        client.connectionTimeout = const Duration(seconds: 180);
         final uri = Uri.parse(apiEndpoint);
         final request = await client.postUrl(uri);
 
         request.headers.set('Content-Type', 'application/json');
-        request.headers.set('Authorization', 'Bearer $apiKey');
+        if (apiKey.isNotEmpty) {
+          request.headers.set('Authorization', 'Bearer $apiKey');
+        }
         request.headers.set('HTTP-Referer', 'https://smartvenue.app');
         request.headers.set('X-Title', 'SmartVenue AI Analyser');
 
@@ -83,7 +160,7 @@ Return ONLY a structured JSON array containing these objects without extra markd
             {
               "role": "user",
               "content": [
-                {"type": "text", "text": _visionPrompt},
+                {"type": "text", "text": combinedPrompt},
                 if (base64Image.isNotEmpty)
                   {
                     "type": "image_url",
@@ -92,8 +169,9 @@ Return ONLY a structured JSON array containing these objects without extra markd
               ],
             },
           ],
-          "temperature": 0.2,
-          "max_tokens": 3927,
+          "temperature": 0.0,
+          "top_p": 0.1,
+          "max_tokens": 4096,
         });
 
         request.write(payload);
@@ -159,30 +237,31 @@ Return ONLY a structured JSON array containing these objects without extra markd
           return AiAnalysisResult(
             extractedSchedule: extractedList,
             summary:
-            'Successfully extracted ${extractedList.length} classes via OpenRouter API ($modelName).',
+            'Successfully extracted ${extractedList.length} classes via Ollama AI ($modelName).',
             recommendedClass: recommended,
             rawResponse: responseBody,
-            apiName: "OpenRouter Vision API",
+            apiName: apiName,
           );
         } else {
           return AiAnalysisResult(
             extractedSchedule: [],
-            summary: 'OpenRouter API returned a response, but no classes were extracted.',
+            summary: 'Ollama AI returned a response, but no classes were extracted.',
             recommendedClass: null,
             rawResponse: responseBody,
-            apiName: "OpenRouter Vision API",
+            apiName: apiName,
           );
         }
       } catch (e) {
-        debugPrint("OpenRouter Vision API call note: $e.");
+        debugPrint("Ollama AI call note: $e.");
         String userFriendlyError = "Cannot scan image. The AI engine encountered an error.";
 
-        if (e.toString().contains("credit") || e.toString().contains("tokens")) {
-          userFriendlyError = "Cannot scan image. API token limit reached or free credits exhausted.";
-        } else if (e.toString().contains("Unterminated") || e.toString().contains("Unexpected end")) {
-          userFriendlyError = "Cannot scan image. The timetable is too large for the current API tier.";
-        } else if (e.toString().contains("SocketException") || e.toString().contains("TimeoutException")) {
-          userFriendlyError = "Cannot scan image. Network connection to AI server timed out.";
+        if (e.toString().contains("SocketException") ||
+            e.toString().contains("TimeoutException") ||
+            e.toString().contains("Connection refused")) {
+          userFriendlyError =
+              "Cannot connect to Ollama at $apiEndpoint. Make sure Ollama server is running (e.g. `ollama serve`).";
+        } else if (e.toString().contains("404")) {
+          userFriendlyError = "Model '$modelName' not found on Ollama. Run `ollama pull $modelName` first.";
         }
 
         return AiAnalysisResult(
@@ -190,7 +269,7 @@ Return ONLY a structured JSON array containing these objects without extra markd
           summary: userFriendlyError,
           recommendedClass: null,
           rawResponse: '{"status": "error", "message": "$e"}',
-          apiName: "OpenRouter Vision API",
+          apiName: apiName,
         );
       }
     }
@@ -202,10 +281,10 @@ Return ONLY a structured JSON array containing these objects without extra markd
     return AiAnalysisResult(
       extractedSchedule: [],
       summary:
-      'OpenRouter Engine failed to parse "$imageName" or no API key provided.',
+      'Ollama Endpoint missing or unreachable at $apiEndpoint.',
       recommendedClass: null,
-      rawResponse: '{"status": "error", "message": "API key missing or failed to parse"}',
-      apiName: "OpenRouter Vision API",
+      rawResponse: '{"status": "error", "message": "Ollama endpoint missing"}',
+      apiName: apiName,
     );
   }
 
