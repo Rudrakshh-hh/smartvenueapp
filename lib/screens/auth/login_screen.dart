@@ -4,6 +4,7 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/cyber_background.dart';
 import '../../widgets/glass_container.dart';
+import '../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,12 +13,17 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+
 class _LoginScreenState extends State<LoginScreen> {
   bool _isSignUp = false;
-  final _idController = TextEditingController(text: 'SU-2026-8942');
-  final _nameController = TextEditingController(text: 'Alex Mercer');
-  final _passwordController = TextEditingController(text: '••••••••');
+
+  final _idController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
 
   @override
   void dispose() {
@@ -27,10 +33,83 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleAuth() {
-    final appState = Provider.of<AppState>(context, listen: false);
-    appState.login(_nameController.text, _idController.text);
+
+
+  Future<void> _handleAuth() async {
+    if (_isLoading) return;
+
+    final email = _idController.text.trim();
+    final password = _passwordController.text;
+    final name = _nameController.text.trim();
+
+    if (email.isEmpty || password.isEmpty ||
+        (_isSignUp && name.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isSignUp
+                ? 'Enter your name, email, and password.'
+                : 'Enter your email and password.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isSignUp) {
+        final message = await AuthService.register(
+          name: name,
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+
+        setState(() => _isSignUp = false);
+      } else {
+        final result = await AuthService.login(
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        final user = result['user'] as Map<String, dynamic>;
+        final appState = Provider.of<AppState>(
+          context,
+          listen: false,
+        );
+
+        appState.login(
+          user['name'] as String,
+          user['email'] as String,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +303,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             elevation: 8,
                             shadowColor: (_isSignUp ? AppTheme.purpleAccent : AppTheme.cyanPrimary).withValues(alpha: 0.4),
                           ),
-                          child: Text(
+                          child: _isLoading
+                              ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.black,
+                            ),
+                          )
+                              : Text(
                             _isSignUp ? 'CREATE CAMPUS PASS' : 'AUTHENTICATE',
                             style: const TextStyle(
                               color: Colors.black,
@@ -239,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Biometric Fast Auth Shortcut
                       OutlinedButton.icon(
-                        onPressed: _handleAuth,
+                        onPressed: _isLoading ? null : _handleAuth,
                         icon: const Icon(Icons.fingerprint_rounded, color: AppTheme.cyanPrimary),
                         label: const Text(
                           'Biometric Fast Key',
