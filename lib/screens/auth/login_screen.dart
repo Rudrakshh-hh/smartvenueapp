@@ -4,6 +4,7 @@ import '../../providers/app_state.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/cyber_background.dart';
 import '../../widgets/glass_container.dart';
+import '../../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  bool _isLoading = false;
   bool _isSignUp = false;
   final _idController = TextEditingController(text: 'SU-2026-8942');
   final _nameController = TextEditingController(text: 'Alex Mercer');
@@ -27,10 +29,80 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleAuth() {
-    final appState = Provider.of<AppState>(context, listen: false);
-    appState.login(_nameController.text, _idController.text);
+
+  Future<void> _handleAuth() async {
+    final appState = Provider.of<AppState>(
+      context,
+      listen: false,
+    );
+
+    final name = _nameController.text.trim();
+    final email = _idController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty ||
+        (_isSignUp && name.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isSignUp) {
+        // REGISTER USER IN MYSQL
+        final message = await AuthService.register(
+          name: name,
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+
+        setState(() {
+          _isSignUp = false;
+          _passwordController.clear();
+        });
+      } else {
+        // LOGIN USING BACKEND
+        final data = await AuthService.login(
+          email: email,
+          password: password,
+        );
+
+        final user = data['user'] as Map<String, dynamic>;
+
+        if (!mounted) return;
+
+        // Update local app state after successful authentication
+        appState.login(
+          user['name'].toString(),
+          user['email'].toString(),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst('Exception: ', ''),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +287,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: double.infinity,
                         height: 52,
                         child: ElevatedButton(
-                          onPressed: _handleAuth,
+                        onPressed: _isLoading ? null : _handleAuth,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: _isSignUp ? AppTheme.purpleAccent : AppTheme.cyanPrimary,
                             shape: RoundedRectangleBorder(
@@ -224,7 +296,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             elevation: 8,
                             shadowColor: (_isSignUp ? AppTheme.purpleAccent : AppTheme.cyanPrimary).withValues(alpha: 0.4),
                           ),
-                          child: Text(
+                          child: _isLoading
+                              ? const CircularProgressIndicator(color: Colors.black)
+                              : Text(
                             _isSignUp ? 'CREATE CAMPUS PASS' : 'AUTHENTICATE',
                             style: const TextStyle(
                               color: Colors.black,
