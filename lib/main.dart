@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-
+import 'services/booking_api_service.dart';
 import 'providers/app_state.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_navigation_shell.dart';
 
 void main() {
+  BookingApiService.authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc5NDc2MTcwMiwiZXhwIjoxNzk0NzY1MzAyLCJzdWIiOiIxIn0.-ryB605fvveTHuGhnfu8JKJqivXOYSB-hhJqCMzHr-M';
   WidgetsFlutterBinding.ensureInitialized();
   
   // Set system UI overlay style to match the dark theme

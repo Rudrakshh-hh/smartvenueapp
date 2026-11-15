@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/app_state.dart';
-import '../../services/booking_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/glass_container.dart';
+import '../../widgets/book_venue_sheet.dart';
 import '../../widgets/navigation_modal.dart';
 import '../../models/venue.dart';
 
@@ -184,66 +184,24 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
     );
   }
 
-  void _handleBooking(BuildContext context, Venue venue) async {
-    // Show a loading indicator
-    showDialog(
+  /// BOOK NOW: opens the booking sheet. The sheet saves the booking in the
+  /// database (through the API) and returns true when it worked.
+  Future<void> _handleBooking(BuildContext context, Venue venue) async {
+    final booked = await showModalBottomSheet<bool>(
       context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => BookVenueSheet(venue: venue),
     );
 
-    try {
-      final monitor = BookingOSMonitor();
-
-      // Seat counts are not entered yet (capacity 0), so treat such a venue
-      // as a single bookable slot instead of "full".
-      monitor.registerVenueCapacity(
-        venue.id,
-        venue.capacity > 0 ? venue.capacity : 1,
+    if (booked == true && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${venue.name} booked successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-
-      // Create an OS Process for the booking request
-      final process = BookingProcess(
-        userId: "USER_${DateTime.now().millisecondsSinceEpoch}", // Simulate unique user ID
-        venueId: venue.id,
-        timeSlot: DateTime.now(), // Real app would let user pick time
-      );
-
-      // Await OS-level FCFS mutex assignment
-      bool success = await monitor.requestBooking(process);
-
-      // Hide loading
-      if (context.mounted) Navigator.pop(context);
-
-      if (!context.mounted) return;
-
-      if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Success: Venue ${venue.code} booked via FCFS Mutex!'),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed: Venue ${venue.code} reached capacity.'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) Navigator.pop(context);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('OS Exception: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
 
