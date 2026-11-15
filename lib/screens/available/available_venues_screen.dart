@@ -22,6 +22,10 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final isDark = appState.isDarkMode;
+
+    // Filter chips come from the real venue data (Lecture Theatre, Classroom, ...)
+    final categories = appState.venues.map((v) => v.category).toSet().toList();
+
     final available = appState.availableVacantVenues.where((v) {
       if (_selectedCategory == null) return true;
       return v.category == _selectedCategory;
@@ -93,6 +97,13 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                         ),
                       ],
                     ),
+                    Text(
+                      'Main Building • First Floor',
+                      style: TextStyle(
+                        color: AppTheme.textMuted(isDark),
+                        fontSize: 11.5,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -100,20 +111,16 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
           ),
           const SizedBox(height: 18),
 
-          // Category Filter Chips
+          // Category Filter Chips (built from the real categories)
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
                 _buildCategoryChip('All Categories', null, isDark),
-                const SizedBox(width: 8),
-                _buildCategoryChip('Lecture Hall', 'Lecture Hall', isDark),
-                const SizedBox(width: 8),
-                _buildCategoryChip('Computer Lab', 'Computer Lab', isDark),
-                const SizedBox(width: 8),
-                _buildCategoryChip('Study Pod', 'Study Pod', isDark),
-                const SizedBox(width: 8),
-                _buildCategoryChip('Seminar Hall', 'Seminar Hall', isDark),
+                for (final category in categories) ...[
+                  const SizedBox(width: 8),
+                  _buildCategoryChip(category, category, isDark),
+                ],
               ],
             ),
           ),
@@ -187,10 +194,13 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
 
     try {
       final monitor = BookingOSMonitor();
-      
-      // Ensure capacity is registered in the OS monitor
-      // Normally this happens on app load, but we do it here for safety
-      monitor.registerVenueCapacity(venue.id, venue.capacity);
+
+      // Seat counts are not entered yet (capacity 0), so treat such a venue
+      // as a single bookable slot instead of "full".
+      monitor.registerVenueCapacity(
+        venue.id,
+        venue.capacity > 0 ? venue.capacity : 1,
+      );
 
       // Create an OS Process for the booking request
       final process = BookingProcess(
@@ -292,7 +302,7 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                       ),
                     ),
                     Text(
-                      '${venue.building} (Level ${venue.level})',
+                      '${venue.building} • ${venue.category} • Level ${venue.level}',
                       style: TextStyle(
                         color: AppTheme.textMuted(isDark),
                         fontSize: 11.5,
@@ -313,14 +323,16 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                 ),
                 child: Column(
                   children: [
-                    Text(
-                      '${venue.capacity} SEATS',
-                      style: TextStyle(
-                        color: AppTheme.textPrimary(isDark),
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                    // Hidden until real seat counts are entered (capacity > 0)
+                    if (venue.capacity > 0)
+                      Text(
+                        '${venue.capacity} SEATS',
+                        style: TextStyle(
+                          color: AppTheme.textPrimary(isDark),
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
                     Text(
                       'VACANT',
                       style: TextStyle(
@@ -336,7 +348,7 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
           ),
           const SizedBox(height: 12),
 
-          // Status & Distance
+          // Current status
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
@@ -361,46 +373,42 @@ class _AvailableVenuesScreenState extends State<AvailableVenuesScreen> {
                     ),
                   ),
                 ),
-                Text(
-                  '${venue.distanceMeters.toInt()}m away',
-                  style: TextStyle(
-                    color: AppTheme.cyan(isDark),
-                    fontSize: 11.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ],
             ),
           ),
           const SizedBox(height: 12),
 
-          // Tags
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: venue.tags.map((tag) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: AppTheme.cyan(isDark).withValues(alpha: 0.15),
+          // Tags (only shown when a venue has some)
+          if (venue.tags.isNotEmpty) ...[
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: venue.tags.map((tag) {
+                return Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color:
+                        isDark ? AppTheme.darkSurface : AppTheme.lightSurface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppTheme.cyan(isDark).withValues(alpha: 0.15),
+                    ),
                   ),
-                ),
-                child: Text(
-                  '# $tag',
-                  style: TextStyle(
-                    color: AppTheme.textMuted(isDark),
-                    fontSize: 10,
+                  child: Text(
+                    '# $tag',
+                    style: TextStyle(
+                      color: AppTheme.textMuted(isDark),
+                      fontSize: 10,
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 14),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 14),
+          ],
 
-          // Claim / Navigate Now Button
+          // Book / Navigate buttons
           Row(
             children: [
               Expanded(

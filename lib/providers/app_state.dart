@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-
+import '../data/first_floor_venues.dart';
 import '../models/venue.dart';
 import '../models/timetable_item.dart';
 import '../services/ai_timetable_service.dart';
@@ -70,10 +70,9 @@ class AppState extends ChangeNotifier {
   int? _selectedLevelFilter;
   String? _selectedCategoryFilter;
   List<String> _recentSearches = [
-    'LH-201 Turing Hall',
-    'AI Robotics Lab 304',
-    'Quiet Pod B',
-    'Innovation Center',
+    'Classroom 113',
+    'Lecture Theatre 106',
+    'Computer Lab 2',
   ];
 
   String get searchQuery => _searchQuery;
@@ -82,7 +81,7 @@ class AppState extends ChangeNotifier {
   List<String> get recentSearches => _recentSearches;
 
   // Venues List
-  final List<Venue> _venues = List.from(Venue.sampleVenues);
+  final List<Venue> _venues = List.from(kFirstFloorVenues);
   List<Venue> get venues => _venues;
 
   List<Venue> get filteredVenues {
