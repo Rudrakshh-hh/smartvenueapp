@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
+import 'floor_plan/floor_plan_data.dart';
+import 'floor_plan/floor_plan_map.dart';
 import 'glass_container.dart';
 
 class NavigationModal extends StatefulWidget {
@@ -40,6 +42,12 @@ class _NavigationModalState extends State<NavigationModal>
     if (venue == null) return const SizedBox.shrink();
 
     final isArrived = appState.navDistanceRemaining == 0;
+
+    // Find the target room on the digital floor plan map
+    final targetRoom = findRoomForVenue(venue);
+    final routePoints = targetRoom != null ? computeRouteForRoom(targetRoom) : null;
+    final initialDist = venue.distanceMeters > 0 ? venue.distanceMeters : 1.0;
+    final progress = (1.0 - (appState.navDistanceRemaining / initialDist)).clamp(0.0, 1.0);
 
     return Container(
       decoration: BoxDecoration(
@@ -136,33 +144,64 @@ class _NavigationModalState extends State<NavigationModal>
             ),
             const SizedBox(height: 16),
 
-            // Simulated Interactive Indoor Map Blueprint Canvas
+            // Live Digital Floor Plan Map Canvas
             GlassContainer(
               borderRadius: 20,
               padding: const EdgeInsets.all(12),
               child: Column(
                 children: [
-                  SizedBox(
-                    height: 180,
+                  Container(
+                    height: 200,
                     width: double.infinity,
-                    child: AnimatedBuilder(
-                      animation: _pulseController,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          painter: _IndoorRouteCanvasPainter(
-                            progress:
-                                1.0 -
-                                (appState.navDistanceRemaining /
-                                        (venue.distanceMeters > 0
-                                            ? venue.distanceMeters
-                                            : 1.0))
-                                    .clamp(0.0, 1.0),
-                            pulse: _pulseController.value,
-                            isArrived: isArrived,
-                            isDark: isDark,
+                    clipBehavior: Clip.antiAlias,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: AppTheme.cyanPrimary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        AnimatedBuilder(
+                          animation: _pulseController,
+                          builder: (context, child) {
+                            return FloorPlanMap(
+                              occupancy: {
+                                if (targetRoom != null) targetRoom.id: venue.isOccupied
+                              },
+                              selectedRoomId: targetRoom?.id,
+                              routePoints: routePoints,
+                              progress: progress,
+                              pulse: _pulseController.value,
+                              isNavigating: true,
+                              isArrived: isArrived,
+                            );
+                          },
+                        ),
+                        Positioned(
+                          top: 4,
+                          right: 4,
+                          child: IconButton(
+                            tooltip: 'Fullscreen Digital Map',
+                            icon: const Icon(
+                              Icons.fullscreen,
+                              color: Colors.white,
+                            ),
+                            onPressed: () => FloorPlanFullScreen.open(
+                              context,
+                              occupancy: {
+                                if (targetRoom != null) targetRoom.id: venue.isOccupied
+                              },
+                              selectedRoomId: targetRoom?.id,
+                              routePoints: routePoints,
+                              progress: progress,
+                              pulse: _pulseController.value,
+                              isNavigating: true,
+                              isArrived: isArrived,
+                            ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -364,6 +403,46 @@ class _NavigationModalState extends State<NavigationModal>
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () {
+                      appState.toggleBleAnchorBroadcasting(venue);
+                    },
+                    icon: Icon(
+                      appState.isBleAnchorBroadcasting
+                          ? Icons.sensors_off_rounded
+                          : Icons.sensors_rounded,
+                      size: 18,
+                      color: appState.isBleAnchorBroadcasting
+                          ? AppTheme.roseAlert
+                          : AppTheme.cyanPrimary,
+                    ),
+                    label: Text(
+                      appState.isBleAnchorBroadcasting
+                          ? 'Stop Anchor'
+                          : 'BLE Anchor Mode',
+                      style: TextStyle(
+                        color: appState.isBleAnchorBroadcasting
+                            ? AppTheme.roseAlert
+                            : AppTheme.cyanPrimary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: BorderSide(
+                        color: appState.isBleAnchorBroadcasting
+                            ? AppTheme.roseAlert
+                            : AppTheme.cyanPrimary,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
                       appState.triggerArUcoRecalibration();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -380,10 +459,10 @@ class _NavigationModalState extends State<NavigationModal>
                       color: AppTheme.cyanPrimary,
                     ),
                     label: const Text(
-                      'ArUco Recalibrate',
+                      'ArUco Scan',
                       style: TextStyle(
                         color: AppTheme.cyanPrimary,
-                        fontSize: 13,
+                        fontSize: 12,
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -395,7 +474,7 @@ class _NavigationModalState extends State<NavigationModal>
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () => appState.stopNavigation(),
@@ -409,11 +488,11 @@ class _NavigationModalState extends State<NavigationModal>
                       ),
                     ),
                     child: Text(
-                      isArrived ? 'Finish Navigation' : 'Cancel Route',
+                      isArrived ? 'Finish' : 'Cancel',
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
                   ),

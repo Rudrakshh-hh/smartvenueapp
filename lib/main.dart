@@ -8,7 +8,7 @@ import 'screens/auth/login_screen.dart';
 import 'screens/main_navigation_shell.dart';
 
 void main() {
-  BookingApiService.authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc5NDc2MTcwMiwiZXhwIjoxNzk0NzY1MzAyLCJzdWIiOiIxIn0.-ryB605fvveTHuGhnfu8JKJqivXOYSB-hhJqCMzHr-M';
+  BookingApiService.authToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc5NDc2NTQ5MiwiZXhwIjoxNzk0NzY5MDkyLCJzdWIiOiIxIn0.yHB_OAAZ4O1Aeikdv7OtM5f0FOMkjxrNGwx_lNd0rBg';
   WidgetsFlutterBinding.ensureInitialized();
   
   // Set system UI overlay style to match the dark theme

@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_ble_peripheral/flutter_ble_peripheral.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../data/first_floor_venues.dart';
 import '../models/venue.dart';
 import '../models/timetable_item.dart';
@@ -39,10 +43,22 @@ class AppState extends ChangeNotifier {
   // Live Positioning & IPS System State
   final String _currentBuilding = '';
   final int _currentLevel = 1;
-  String _activeBleAnchor = '';
+  String _activeBleAnchor = 'BLE Scanning Idle';
   int _pdrStepCounter = 0;
   bool _isArucoCalibrated = false;
   DateTime _lastArucoScanTime = DateTime.now();
+
+  // BLE Beacon Ranging & Broadcaster State
+  static const String bleBeaconUUID = 'B9407F30-F5F8-466E-AFF9-25556B57FE6D';
+  final FlutterBlePeripheral _blePeripheral = FlutterBlePeripheral();
+  StreamSubscription? _bleScanSubscription;
+  bool _isBleAnchorBroadcasting = false;
+  bool _isBleBeaconDetected = false;
+  int _lastBleRssi = -100;
+
+  bool get isBleAnchorBroadcasting => _isBleAnchorBroadcasting;
+  bool get isBleBeaconDetected => _isBleBeaconDetected;
+  int get lastBleRssi => _lastBleRssi;
 
   String get currentBuilding => _currentBuilding;
   int get currentLevel => _currentLevel;
@@ -208,16 +224,27 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Indoor Navigation Control
+  // Indoor Navigation Control & Real BLE Beacon Ranging
   void startNavigation(Venue venue) {
     _isNavigating = true;
     _navigationTargetVenue = venue;
-    _navDistanceRemaining = venue.distanceMeters;
-    _navEstMinutesRemaining = (venue.distanceMeters / 30).ceil();
+    _navDistanceRemaining = venue.distanceMeters > 0 ? venue.distanceMeters : 45.0;
+    _navEstMinutesRemaining = (_navDistanceRemaining / 30).ceil();
     _navCurrentStepIndex = 1;
+    _isBleBeaconDetected = false;
+    _activeBleAnchor = 'Scanning for BLE Beacon...';
 
+    // Start BLE Ranging to scan for Anchor phone
+    _startBleNavigationScanner(venue);
+
+    // Fallback simulation timer (only moves if no real BLE beacon anchor is detected)
     _navSimulationTimer?.cancel();
     _navSimulationTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (_isBleBeaconDetected) {
+        // Real BLE Beacon is actively driving movement! Skip fake simulation.
+        return;
+      }
+
       if (_navDistanceRemaining > 5) {
         _navDistanceRemaining -= 5;
         _pdrStepCounter += 8;
@@ -237,10 +264,111 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _startBleNavigationScanner(Venue venue) async {
+    try {
+      await [
+        Permission.location,
+        Permission.bluetooth,
+        Permission.bluetoothScan,
+        Permission.bluetoothConnect,
+      ].request();
+
+      if (await FlutterBluePlus.adapterState.first == BluetoothAdapterState.off) {
+        await FlutterBluePlus.turnOn();
+      }
+
+      await FlutterBluePlus.startScan(
+        withServices: [Guid(bleBeaconUUID)],
+      );
+
+      _bleScanSubscription?.cancel();
+      _bleScanSubscription = FlutterBluePlus.scanResults.listen((results) {
+        if (!_isNavigating) return;
+
+        if (results.isNotEmpty) {
+          results.sort((a, b) => b.rssi.compareTo(a.rssi));
+          final closest = results.first;
+          final rssi = closest.rssi;
+          _lastBleRssi = rssi;
+          _isBleBeaconDetected = true;
+
+          // Convert RSSI to distance in meters using Log-Distance Path Loss Model
+          // Formula: d = 10 ^ ((MeasuredPower - RSSI) / (10 * N))
+          // MeasuredPower = -59 dBm at 1m, N = 2.0
+          double rawDist = math.pow(10, (-59 - rssi) / 20.0).toDouble();
+          _navDistanceRemaining = rawDist.clamp(0.0, venue.distanceMeters > 0 ? venue.distanceMeters : 100.0);
+          _navEstMinutesRemaining = (_navDistanceRemaining / 30).ceil();
+          _pdrStepCounter += 2;
+
+          _activeBleAnchor = 'BLE Beacon Locked: ${rssi} dBm (~${_navDistanceRemaining.toStringAsFixed(1)}m)';
+
+          if (_navDistanceRemaining <= 2.0) {
+            _navDistanceRemaining = 0.0;
+            _navCurrentStepIndex = 3;
+            _activeBleAnchor = 'BLE Beacon Arrived! (${rssi} dBm)';
+          } else if (_navDistanceRemaining <= 15.0) {
+            _navCurrentStepIndex = 2;
+          }
+
+          notifyListeners();
+        }
+      });
+    } catch (e) {
+      debugPrint("BLE Navigation Scanner Error: $e");
+    }
+  }
+
+  Future<void> toggleBleAnchorBroadcasting(Venue? venue) async {
+    if (_isBleAnchorBroadcasting) {
+      await stopBleAnchorBroadcasting();
+    } else if (venue != null) {
+      await startBleAnchorBroadcasting(venue);
+    }
+  }
+
+  Future<void> startBleAnchorBroadcasting(Venue venue) async {
+    try {
+      await [
+        Permission.bluetooth,
+        Permission.bluetoothAdvertise,
+        Permission.bluetoothConnect,
+      ].request();
+
+      if (await _blePeripheral.isSupported == false) return;
+
+      final advertiseData = AdvertiseDataCore(
+        serviceUuid: bleBeaconUUID,
+        localName: venue.code,
+      );
+
+      await _blePeripheral.start(advertiseData: advertiseData);
+      _isBleAnchorBroadcasting = true;
+      _activeBleAnchor = 'Broadcasting as BLE Anchor for ${venue.code}';
+      notifyListeners();
+    } catch (e) {
+      debugPrint("BLE Anchor Broadcast Error: $e");
+    }
+  }
+
+  Future<void> stopBleAnchorBroadcasting() async {
+    try {
+      await _blePeripheral.stop();
+      _isBleAnchorBroadcasting = false;
+      _activeBleAnchor = 'BLE Anchor Stopped';
+      notifyListeners();
+    } catch (e) {
+      debugPrint("BLE Anchor Stop Error: $e");
+    }
+  }
+
   void stopNavigation() {
     _isNavigating = false;
     _navigationTargetVenue = null;
+    _isBleBeaconDetected = false;
     _navSimulationTimer?.cancel();
+    _bleScanSubscription?.cancel();
+    _bleScanSubscription = null;
+    FlutterBluePlus.stopScan();
     notifyListeners();
   }
 

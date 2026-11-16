@@ -28,9 +28,9 @@ class AiAnalysisResult {
 /// to extract timing, day, subject, and venue from timetable images and schedule classes automatically.
 class AiTimetableService {
   // Configurable Ollama API Parameters
-  static String customApiKey = "xyz";
+  static String customApiKey = "";
   static String customApiEndpoint = "";
-  static String customModelName = "gemma4:31b-cloud";
+  static String customModelName = "qwen3.5:4b";
 
   static String get apiKey {
     if (customApiKey.isNotEmpty) return customApiKey;
@@ -41,7 +41,7 @@ class AiTimetableService {
     if (customApiEndpoint.isNotEmpty) return customApiEndpoint;
     return const String.fromEnvironment(
       'OLLAMA_ENDPOINT',
-      defaultValue: 'http://localhost:11434/v1/chat/completions',
+      defaultValue: 'http://192.168.0.106:11434/api/chat',
     );
   }
 
@@ -64,7 +64,7 @@ CRITICAL PARSING GUIDELINES:
 1. READ LOOKUP LEGEND: First scan the subject lookup table/legend (usually at the bottom or side of the timetable) to map each Subject Code (e.g. "TCS 502") to its exact full Subject Name (e.g. "Operating Systems") and Instructor Name (e.g. "Ms. Himadri Vaidya").
 2. SPELLING & NAMES: Transcribe instructor names and subject titles verbatim from the legend. Do NOT guess, alter, abridge, or misspell any names or titles. Include honorifics (Dr., Prof., Mr., Ms.) exactly as written.
 3. GRID CORRELATION: Examine every day row (Monday-Saturday) and time slot column. For each scheduled class session, create an entry.
-4. CODES & ROOMS: Transcribe venue codes (e.g. "224 (LT)", "LH-102") and course codes (e.g. "TCS-502") character-by-character as shown in the image.
+4. CODES & ROOMS: Transcribe venue codes (e.g. "224 (LT)", "LT-102") and course codes (e.g. "TCS-502") character-by-character as shown in the image.
 5. EXACT TIME SLOT MAPPING:
    - Carefully read the column headers at the top of the schedule grid defining period time slots 
    - Extract the EXACT startTime and endTime corresponding to the specific column header above each class cell.
@@ -153,26 +153,61 @@ Each object must contain these exact keys:
         request.headers.set('X-Title', 'SmartVenue AI Analyser');
 
         final base64Image = imageBytes != null ? base64Encode(imageBytes) : "";
+        final isNativeOllama = uri.path.endsWith('/api/chat');
 
-        final payload = jsonEncode({
-          "model": modelName,
-          "messages": [
-            {
-              "role": "user",
-              "content": [
-                {"type": "text", "text": combinedPrompt},
-                if (base64Image.isNotEmpty)
+        final payload = isNativeOllama
+            ? jsonEncode({
+                "model": modelName,
+                "format": "json",
+                "messages": [
                   {
-                    "type": "image_url",
-                    "image_url": {"url": "data:image/jpeg;base64,$base64Image"},
+                    "role": "system",
+                    "content": "You are a zero-error academic timetable extraction AI. Output strictly valid JSON."
                   },
-              ],
-            },
-          ],
-          "temperature": 0.0,
-          "top_p": 0.1,
-          "max_tokens": 4096,
-        });
+                  {
+                    "role": "user",
+                    "content": "$combinedPrompt\n\nReturn a JSON object containing a 'schedule' array of class objects with keys: courseCode, courseTitle, venueCode, building, level, dayOfWeek, startTime, endTime, instructor, aiRecommendation.",
+                    if (base64Image.isNotEmpty) "images": [base64Image]
+                  }
+                ],
+                "stream": false,
+                "options": {
+                  "temperature": 0.1,
+                  "top_p": 0.1,
+                  "num_ctx": 32768,
+                  "num_predict": 16384
+                }
+              })
+            : jsonEncode({
+                "model": modelName,
+                "messages": [
+                  {
+                    "role": "system",
+                    "content": "You are a zero-error academic timetable extraction AI. Output strictly valid JSON.",
+                  },
+                  {
+                    "role": "user",
+                    "content": base64Image.isNotEmpty
+                        ? [
+                            {
+                              "type": "text",
+                              "text": "$combinedPrompt\n\nReturn a JSON object containing a 'schedule' array of class objects with keys: courseCode, courseTitle, venueCode, building, level, dayOfWeek, startTime, endTime, instructor, aiRecommendation."
+                            },
+                            {
+                              "type": "image_url",
+                              "image_url": {
+                                "url": "data:image/jpeg;base64,$base64Image"
+                              }
+                            }
+                          ]
+                        : "$combinedPrompt\n\nReturn a JSON object containing a 'schedule' array of class objects with keys: courseCode, courseTitle, venueCode, building, level, dayOfWeek, startTime, endTime, instructor, aiRecommendation.",
+                  }
+                ],
+                "stream": false,
+                "temperature": 0.1,
+                "top_p": 0.1,
+                "max_tokens": 16384
+              });
 
         request.write(payload);
         final response = await request.close();
@@ -185,51 +220,114 @@ Each object must contain these exact keys:
 
         debugPrint("Full API Response: $responseBody");
 
-        if (parsedJson is Map && parsedJson.containsKey('choices')) {
-          var contentRaw = parsedJson['choices'][0]['message']['content'];
-          var contentText = contentRaw?.toString().trim() ?? '';
+        var contentText = '';
+        var reasoningText = '';
 
-          debugPrint("Raw AI Response: $contentText");
-
-          if (contentText.contains('```')) {
-            contentText = contentText
-                .replaceAll(RegExp(r'```json\s*'), '')
-                .replaceAll(RegExp(r'```\s*'), '')
-                .trim();
+        if (parsedJson is Map && parsedJson.containsKey('message')) {
+          // Native Ollama response format
+          contentText = parsedJson['message']['content']?.toString().trim() ?? '';
+          
+          if (parsedJson['message'].containsKey('thinking')) {
+             reasoningText = parsedJson['message']['thinking'].toString().trim();
+          } else if (contentText.contains('<think>')) {
+             int thinkStart = contentText.indexOf('<think>');
+             int thinkEnd = contentText.indexOf('</think>');
+             if (thinkEnd != -1) {
+                reasoningText = contentText.substring(thinkStart + 7, thinkEnd).trim();
+                contentText = contentText.substring(thinkEnd + 8).trim();
+             } else {
+                reasoningText = contentText.substring(thinkStart + 7).trim();
+                contentText = contentText.substring(thinkStart + 7).trim(); 
+             }
           }
-
-          // Sometimes AI adds text before the JSON array. Find the array brackets.
-          final startIndex = contentText.indexOf('[');
-          final endIndex = contentText.lastIndexOf(']');
-
-          if (startIndex != -1 && endIndex != -1 && endIndex >= startIndex) {
-            contentText = contentText.substring(startIndex, endIndex + 1);
-          }
-
-          if (contentText.isEmpty || contentText == 'null') {
-            throw Exception("AI returned empty or null content.");
-          }
-
-          try {
-            final dynamic decoded = jsonDecode(contentText);
-            if (decoded is List) {
-              for (var i = 0; i < decoded.length; i++) {
-                extractedList.add(TimetableItem.fromJson(decoded[i], id: 'ai_$i'));
-              }
-            } else {
-              throw Exception("AI did not return a JSON array as requested.");
-            }
-          } catch (e) {
-            // Check if the error is just an unterminated string (AI cut off early)
-            if (e.toString().contains("Unterminated string") || e.toString().contains("Unexpected end of input")) {
-              throw Exception("AI output was too long and cut off. Please upgrade your API key limit or scan a smaller image.");
-            }
-            throw Exception("Failed to parse AI JSON: $e");
+        } else if (parsedJson is Map && parsedJson.containsKey('choices')) {
+          // OpenAI response format
+          contentText = parsedJson['choices'][0]['message']['content']?.toString().trim() ?? '';
+          var reasoningRaw = parsedJson['choices'][0]['message']['reasoning'];
+          if (reasoningRaw != null) {
+             reasoningText = reasoningRaw.toString().trim();
           }
         } else if (parsedJson is Map && parsedJson.containsKey('error')) {
-          final errorMsg =
-              parsedJson['error']['message'] ?? parsedJson['error'].toString();
+          final errorMsg = parsedJson['error']['message'] ?? parsedJson['error'].toString();
           throw Exception("API Error: $errorMsg");
+        }
+
+        debugPrint("Raw AI Content: $contentText");
+        if (reasoningText.isNotEmpty) debugPrint("Reasoning block: $reasoningText");
+
+        if (contentText.isEmpty && reasoningText.isNotEmpty) {
+          contentText = reasoningText;
+        }
+
+        if (contentText.contains('```')) {
+          contentText = contentText
+              .replaceAll(RegExp(r'```json\s*'), '')
+              .replaceAll(RegExp(r'```\s*'), '')
+              .trim();
+        }
+
+        if (contentText.isEmpty || contentText == 'null') {
+          throw Exception("AI returned empty content.");
+        }
+
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(contentText);
+        } catch (_) {
+          // Try slicing array or object
+          int arrayStart = contentText.indexOf('[');
+          int arrayEnd = contentText.lastIndexOf(']');
+          int objectStart = contentText.indexOf('{');
+          int objectEnd = contentText.lastIndexOf('}');
+
+          if (arrayStart != -1 && arrayEnd != -1 && arrayEnd > arrayStart &&
+              (objectStart == -1 || arrayStart < objectStart)) {
+            try {
+              decoded = jsonDecode(contentText.substring(arrayStart, arrayEnd + 1));
+            } catch (_) {}
+          }
+          
+          if (decoded == null && objectStart != -1 && objectEnd != -1 && objectEnd > objectStart) {
+            try {
+              decoded = jsonDecode(contentText.substring(objectStart, objectEnd + 1));
+            } catch (_) {}
+          }
+        }
+
+        if (decoded != null) {
+          List<dynamic>? itemList;
+          if (decoded is List) {
+            itemList = decoded;
+          } else if (decoded is Map) {
+            for (var entry in decoded.entries) {
+              if (entry.value is List) {
+                itemList = entry.value as List<dynamic>;
+                break;
+              }
+            }
+            if (itemList == null && decoded.containsKey('courseCode')) {
+              itemList = [decoded];
+            }
+          }
+
+          if (itemList != null) {
+            for (var i = 0; i < itemList.length; i++) {
+              if (itemList[i] is Map) {
+                try {
+                  extractedList.add(TimetableItem.fromJson(
+                    Map<String, dynamic>.from(itemList[i] as Map),
+                    id: 'ai_$i',
+                  ));
+                } catch (e) {
+                  debugPrint("Item parsing note at index $i: $e");
+                }
+              }
+            }
+          }
+        }
+
+        if (extractedList.isEmpty) {
+          throw Exception("Could not parse schedule items from AI response.");
         }
 
         if (extractedList.isNotEmpty) {

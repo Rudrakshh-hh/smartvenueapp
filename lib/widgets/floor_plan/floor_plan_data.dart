@@ -94,6 +94,80 @@ final List<PlanRoom> kFirstFloorRooms = [
   PlanRoom(id: 'deco_sq_r', label: '', points: _rect(1771, 241, 1799, 274), labelAt: Offset(0, 0), tappable: false),
 ];
 
+/// Finds the matching [PlanRoom] on the digital map for a given [Venue].
+PlanRoom? findRoomForVenue(dynamic venue) {
+  if (venue == null) return null;
+  final String imdfId = venue.imdfRoomId ?? '';
+  final String code = venue.code ?? '';
+  final String name = venue.name ?? '';
+
+  // 1. Try exact imdfRoomId match
+  if (imdfId.isNotEmpty) {
+    for (final room in kFirstFloorRooms) {
+      if (room.id == imdfId) return room;
+    }
+  }
+
+  // 2. Try code/number matching (e.g. "106", "124", "117", "113")
+  final codeDigits = RegExp(r'\d+').stringMatch(code) ?? '';
+  final nameDigits = RegExp(r'\d+').stringMatch(name) ?? '';
+
+  for (final room in kFirstFloorRooms) {
+    final roomId = room.id.toLowerCase();
+    final label = room.label.toLowerCase();
+
+    if (codeDigits.isNotEmpty && (roomId.contains(codeDigits) || label.contains(codeDigits))) {
+      return room;
+    }
+    if (nameDigits.isNotEmpty && (roomId.contains(nameDigits) || label.contains(nameDigits))) {
+      return room;
+    }
+  }
+
+  // Default fallback room if no match found (e.g. Lecture Theatre 106)
+  return kFirstFloorRooms.firstWhere((r) => r.id == 'lt106', orElse: () => kFirstFloorRooms.first);
+}
+
+/// Computes an orthogonal corridor navigation route on the digital map for a target room.
+List<Offset> computeRouteForRoom(PlanRoom targetRoom) {
+  const entrance = Offset(1280, 1370); // Central Entrance at bottom
+  final target = targetRoom.labelAt;
+
+  // Waypoints based on target location on the floor plan
+  if (target.dy < 450) {
+    // Upper hallway rooms (CR 113-117, Labs 2 & 9, etc.)
+    return [
+      entrance,
+      const Offset(1280, 400), // Central Atrium / Staircase
+      Offset(target.dx, 400),   // Move along upper hallway
+      target,                   // Into room
+    ];
+  } else if (target.dx < 1100) {
+    // Left wing rooms (LT 106, CR 107, Lab 102)
+    return [
+      entrance,
+      const Offset(800, 1370),  // Left lower corridor
+      Offset(800, target.dy),   // Move up left wing corridor
+      target,                   // Into room
+    ];
+  } else if (target.dx > 1500) {
+    // Right wing rooms (LT 124, CR 123, Library)
+    return [
+      entrance,
+      const Offset(1750, 1370), // Right lower corridor
+      Offset(1750, target.dy),  // Move up right wing corridor
+      target,                   // Into room
+    ];
+  } else {
+    // Central area rooms
+    return [
+      entrance,
+      Offset(1280, target.dy),
+      target,
+    ];
+  }
+}
+
 /// Walls, corridor edges and small details drawn as open lines.
 final List<List<Offset>> kFirstFloorLines = [
   [Offset(750, 55), Offset(667, 55), Offset(667, 241)],

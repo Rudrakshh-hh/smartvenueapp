@@ -26,6 +26,11 @@ class FloorPlanMap extends StatefulWidget {
     this.selectedRoomId,
     this.onRoomTap,
     this.height,
+    this.routePoints,
+    this.progress = 0.0,
+    this.pulse = 0.0,
+    this.isNavigating = false,
+    this.isArrived = false,
   });
 
   /// roomId -> isOccupied. Rooms in this map get a status tint + pin.
@@ -35,6 +40,13 @@ class FloorPlanMap extends StatefulWidget {
 
   /// Fixed height. If null the map takes the plan's natural aspect ratio.
   final double? height;
+
+  /// Navigation parameters
+  final List<Offset>? routePoints;
+  final double progress;
+  final double pulse;
+  final bool isNavigating;
+  final bool isArrived;
 
   @override
   State<FloorPlanMap> createState() => FloorPlanMapState();
@@ -101,6 +113,11 @@ class FloorPlanMapState extends State<FloorPlanMap> {
                           pinRadius: (6 / screenScale).clamp(7.0, 16.0).toDouble(),
                           selectedId: widget.selectedRoomId,
                           occupancy: widget.occupancy,
+                          routePoints: widget.routePoints,
+                          progress: widget.progress,
+                          pulse: widget.pulse,
+                          isNavigating: widget.isNavigating,
+                          isArrived: widget.isArrived,
                         ),
                       );
                     },
@@ -127,17 +144,32 @@ class FloorPlanFullScreen extends StatefulWidget {
     this.occupancy = const {},
     this.initialSelectedId,
     this.onRoomTap,
+    this.routePoints,
+    this.progress = 0.0,
+    this.pulse = 0.0,
+    this.isNavigating = false,
+    this.isArrived = false,
   });
 
   final Map<String, bool> occupancy;
   final String? initialSelectedId;
   final ValueChanged<PlanRoom>? onRoomTap;
+  final List<Offset>? routePoints;
+  final double progress;
+  final double pulse;
+  final bool isNavigating;
+  final bool isArrived;
 
   static Future<void> open(
     BuildContext context, {
     Map<String, bool> occupancy = const {},
     String? selectedRoomId,
     ValueChanged<PlanRoom>? onRoomTap,
+    List<Offset>? routePoints,
+    double progress = 0.0,
+    double pulse = 0.0,
+    bool isNavigating = false,
+    bool isArrived = false,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute(
@@ -146,6 +178,11 @@ class FloorPlanFullScreen extends StatefulWidget {
           occupancy: occupancy,
           initialSelectedId: selectedRoomId,
           onRoomTap: onRoomTap,
+          routePoints: routePoints,
+          progress: progress,
+          pulse: pulse,
+          isNavigating: isNavigating,
+          isArrived: isArrived,
         ),
       ),
     );
@@ -202,6 +239,11 @@ class _FloorPlanFullScreenState extends State<FloorPlanFullScreen> {
             key: _mapKey,
             occupancy: widget.occupancy,
             selectedRoomId: _selectedId,
+            routePoints: widget.routePoints,
+            progress: widget.progress,
+            pulse: widget.pulse,
+            isNavigating: widget.isNavigating,
+            isArrived: widget.isArrived,
             onRoomTap: (room) {
               setState(() {
                 _selectedId = room.id;
